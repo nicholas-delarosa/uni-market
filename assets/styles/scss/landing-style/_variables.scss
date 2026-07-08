@@ -1,0 +1,26 @@
+/*
+_variables.scss
+Variables globales de la landing
+*/
+
+:root {
+    --white: #ffffff;
+    --paper: #f7f7fb;
+    --ink: #13141a;
+    --slate: #5b5f6b;
+    --slate-light: #8a8d97;
+    --line: #e9e9f0;
+    --violet: #5b4fe8;
+    --violet-light: #efedfd;
+    --orange: #ff7a45;
+    --orange-light: #fff0e8;
+    --mint: #0fae87;
+    --mint-light: #e6f8f3;
+
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+
+    --shadow-card: 0 20px 40px -18px rgba(19, 20, 26, 0.18);
+    --shadow-soft: 0 10px 30px -12px rgba(19, 20, 26, 0.12);
+}
