@@ -1,0 +1,68 @@
+// El wrapper #btnMode ya venía en el HTML original (junto con la
+// clase light-mode/dark-mode); acá solo lo posicionamos y le damos
+// forma al botón redondo con los dos iconos superpuestos.
+#btnMode {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+}
+
+.theme-toggle {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-violet);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 2px;
+}
+
+.theme-toggle-icon {
+    position: absolute;
+    width: 19px;
+    height: 19px;
+    color: var(--color-text);
+    transition: opacity 0.25s ease, transform 0.4s ease;
+}
+
+.theme-toggle .icon-moon {
+    opacity: 0;
+    transform: rotate(-60deg) scale(0.6);
+}
+
+// Igual que con los colores, cubrimos las dos convenciones posibles
+// para no depender de si el modo oscuro se activa con un atributo
+// en el html o con una clase en el body.
+@mixin show-moon-icon {
+    .theme-toggle .icon-sun {
+        opacity: 0;
+        transform: rotate(60deg) scale(0.6);
+    }
+
+    .theme-toggle .icon-moon {
+        opacity: 1;
+        transform: rotate(0) scale(1);
+    }
+}
+
+[data-theme='dark'] {
+    @include show-moon-icon;
+}
+
+body.dark-mode {
+    @include show-moon-icon;
+}
