@@ -7,10 +7,60 @@
     <link rel="stylesheet" href="assets/styles/css/style.css">
 </head>
 <body>
-    <h1>¡Bienvenido a Uni-Market!</h1>
+    <div class="header">
+
+        <div class="tabs">
+            <button id="loginAs" class="active">
+                Iniciar sesión
+            </button>
+
+            <button id="registerAs">
+                Crear cuenta
+            </button>
+        </div>
+</div>
 
     <div class="container">
+
         
+        <div class="container-form">
+            <form class="sign-in">
+                <h2>Iniciar Sesión</h2>
+                <span>Use su correo y contraseña</span>
+                <div class="container-input">
+                    <img src="/assets/src/svg/mail.svg" alt="">
+                   <input type="text" placeholder="jesusnoguera@riwi.io" id="">
+                </div>
+                 <div class="container-input">
+                    <label>Contraseña</label>
+                   <input type="password" placeholder="********" id="">
+                </div>
+                <a href="#">¿Olvidaste tu contraseña?</a>
+                <button class="button">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="container-form">
+            <form class="sign-up">
+                <h2>Registrarse</h2>
+                <span>Use su correo electrónico para registrarse</span>
+                <div class="container-input">
+                    <label>Nombre de usuario</label>
+                   <input type="text" placeholder="Nombre" id="">
+                </div>
+                <div class="container-input">
+                    <label>Correo Electrónico</label>
+                   <input type="text" placeholder="jesusnoguera@riwi.io" id="">
+                </div>
+                 <div class="container-input">
+                    <label>Contraseña</label>
+                   <input type="password" placeholder="********" id="">
+                </div>
+                <button class="button">Signup</button>
+            </form>
+        </div>
     </div>
     
     <script type="module" src="assets/js/script.js"></script>

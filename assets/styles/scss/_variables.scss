@@ -1,0 +1,13 @@
+$primary-color: red;
+$secondary-color: black;
+$tertiary-color: green;
+$white-castle: #EEEEEE;
+
+
+
+:root{
+    --primary-color: #{$primary-color};
+    --secondary-color: #{$secondary-color};
+    --tertiary-color: #{$tertiary-color};
+    --white-castle: #{$white-castle};
+}
