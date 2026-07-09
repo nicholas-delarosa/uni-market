@@ -1,0 +1,79 @@
+.logo-strip {
+    padding: 44px 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.logo-strip p {
+    text-align: center;
+    font-size: 14px;
+    color: var(--color-text-faint);
+    margin-bottom: 28px;
+}
+
+.logo-marquee {
+    overflow-x: auto;
+    overflow-y: hidden;
+    cursor: grab;
+    -webkit-user-select: none;
+    user-select: none;
+    scrollbar-width: none;
+}
+
+.logo-marquee::-webkit-scrollbar {
+    display: none;
+}
+
+.logo-marquee.dragging {
+    cursor: grabbing;
+}
+
+.logo-track {
+    display: flex;
+    gap: 28px;
+    width: max-content;
+    padding: 6px 4px 14px;
+    align-items: center;
+}
+
+.logo-item {
+    flex-shrink: 0;
+    width: 148px;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.logo-item:nth-child(3n + 1) {
+    transform: rotate(-2.5deg);
+}
+
+.logo-item:nth-child(3n + 2) {
+    transform: rotate(2deg);
+}
+
+.logo-item:nth-child(3n) {
+    transform: rotate(-1deg);
+}
+
+.logo-item:hover {
+    transform: rotate(0deg) translateY(-3px);
+}
+
+.logo-item img {
+    width: 300px;
+    height: auto;
+    object-fit: cover;
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft);
+    pointer-events: none;
+    -webkit-user-drag: none;
+    filter: brightness(var(--photo-brightness));
+}
+
+.logo-item span {
+    display: block;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}

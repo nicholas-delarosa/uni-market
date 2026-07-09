@@ -1,0 +1,183 @@
+@use 'variables' as *;
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--color-header-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border);
+    transition: box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+/* Clase que agrega el JS cuando el usuario ya bajó un poco la página, para que el header gane algo de profundidad sobre el contenido. */
+header.is-scrolled {
+    box-shadow: var(--shadow-soft);
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0;
+}
+
+.logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--color-violet), var(--color-orange));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.nav-links {
+    display: flex;
+    gap: 36px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
+
+.nav-links a {
+    position: relative;
+}
+
+/* Subrayado que crece desde el centro al pasar el mouse, en vez del simple cambio de color que tenía antes. */
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    width: 0;
+    height: 2px;
+    background: var(--color-violet);
+    transition: width 0.2s ease, left 0.2s ease;
+}
+
+.nav-links a:hover {
+    color: var(--color-text);
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+    left: 0;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.nav-login {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.nav-login:hover {
+    color: var(--color-violet);
+}
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.nav-toggle span {
+    width: 22px;
+    height: 2px;
+    background: var(--color-text);
+    transition: background-color 0.2s ease;
+}
+
+/* Botón circular para cambiar de tema. Los dos iconos (sol y luna) se dibujan encimados y solo se muestra uno según data-theme. */
+.theme-toggle {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-surface);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-violet);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 2px;
+}
+
+.theme-toggle-icon {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    color: var(--color-text);
+    transition: opacity 0.25s ease, transform 0.4s ease;
+}
+
+.theme-toggle .icon-moon {
+    opacity: 0;
+    transform: rotate(-60deg) scale(0.6);
+}
+
+[data-theme='dark'] .theme-toggle .icon-sun {
+    opacity: 0;
+    transform: rotate(60deg) scale(0.6);
+}
+
+[data-theme='dark'] .theme-toggle .icon-moon {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+}
+
+@media (max-width: $bp-nav) {
+    .nav-links {
+        display: none;
+    }
+
+    .nav-toggle {
+        display: flex;
+    }
+
+    /* Estado abierto del menú móvil. Antes esto se armaba a puro estilo inline desde JS; ahora es solo una clase que el JS agrega o quita, y todo el aspecto vive acá. */
+    .nav-links.is-open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
+        background: var(--color-mobile-menu-bg);
+        padding: 24px 32px;
+        border-bottom: 1px solid var(--color-border);
+        gap: 20px;
+    }
+}

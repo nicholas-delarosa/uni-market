@@ -1,26 +1,93 @@
-/*
-_variables.scss
-Variables globales de la landing
-*/
+/* Puntos de quiebre que usamos en los @media de los demás parciales.
+Los dejamos como variables de Sass (no custom properties) porque
+los media queries necesitan un valor fijo en tiempo de compilación. */
+$bp-tablet: 980px;
+$bp-nav: 900px;
+$bp-services: 900px;
+$bp-why: 860px;
+$bp-footer: 860px;
+$bp-mobile: 768px;
+$bp-uni-3: 900px;
+$bp-uni-2: 560px;
+$bp-footer-stack: 560px;
 
+// Radios y sombras: no cambian entre temas, así que van fijos.
+$radius-lg: 24px;
+$radius-md: 16px;
+$radius-sm: 10px;
+
+/* Los colores sí cambian según el tema, por eso van como custom properties de CSS: así el navegador los puede resolver en vivo cuando cambiamos el atributo data-theme con JS, sin recompilar nada. */
 :root {
-    --white: #ffffff;
-    --paper: #f7f7fb;
-    --ink: #13141a;
-    --slate: #5b5f6b;
-    --slate-light: #8a8d97;
-    --line: #e9e9f0;
-    --violet: #5b4fe8;
-    --violet-light: #efedfd;
-    --orange: #ff7a45;
-    --orange-light: #fff0e8;
-    --mint: #0fae87;
-    --mint-light: #e6f8f3;
+    --color-bg: #ffffff;
+    --color-bg-alt: #f7f7fb;
+    --color-surface: #ffffff;
 
-    --radius-lg: 24px;
-    --radius-md: 16px;
-    --radius-sm: 10px;
+    --color-text: #13141a;
+    --color-text-muted: #5b5f6b;
+    --color-text-faint: #8a8d97;
+    --color-border: #e9e9f0;
+
+    --color-header-bg: rgba(255, 255, 255, 0.85);
+    --color-mobile-menu-bg: #ffffff;
+
+    --color-btn-primary-bg: #13141a;
+    --color-btn-primary-text: #ffffff;
+
+    --color-violet: #5b4fe8;
+    --color-violet-soft: #efedfd;
+    --color-orange: #ff7a45;
+    --color-orange-soft: #fff0e8;
+    --color-mint: #0fae87;
+    --color-mint-soft: #e6f8f3;
+
+    --color-footer-bg: #13141a;
+    --color-footer-text: #c8c9d4;
+    --color-footer-text-muted: #9a9caa;
+    --color-footer-text-faint: #797b8a;
+    --color-footer-border: rgba(255, 255, 255, 0.1);
+    --color-footer-social-bg: rgba(255, 255, 255, 0.06);
+
+    --board-dot-color: #dcdce6;
+    --photo-brightness: 1;
 
     --shadow-card: 0 20px 40px -18px rgba(19, 20, 26, 0.18);
     --shadow-soft: 0 10px 30px -12px rgba(19, 20, 26, 0.12);
+}
+
+/* Tema oscuro: no es solo "invertir" los colores, movemos los fondos a una escala de azules/grises oscuros y aclaramos los acentos un poco para que sigan teniendo suficiente contraste sobre fondo oscuro. */
+[data-theme='dark'] {
+    --color-bg: #0e0f14;
+    --color-bg-alt: #15171f;
+    --color-surface: #1b1e28;
+
+    --color-text: #f2f2f7;
+    --color-text-muted: #a7abba;
+    --color-text-faint: #7d818f;
+    --color-border: #2a2d3a;
+
+    --color-header-bg: rgba(14, 15, 20, 0.82);
+    --color-mobile-menu-bg: #15171f;
+
+    --color-btn-primary-bg: #f2f2f7;
+    --color-btn-primary-text: #0e0f14;
+
+    --color-violet: #8078ff;
+    --color-violet-soft: rgba(128, 120, 255, 0.16);
+    --color-orange: #ff9166;
+    --color-orange-soft: rgba(255, 145, 102, 0.14);
+    --color-mint: #27d1a6;
+    --color-mint-soft: rgba(39, 209, 166, 0.14);
+
+    --color-footer-bg: #08090c;
+    --color-footer-text: #c8c9d4;
+    --color-footer-text-muted: #9a9caa;
+    --color-footer-text-faint: #62636e;
+    --color-footer-border: rgba(255, 255, 255, 0.08);
+    --color-footer-social-bg: rgba(255, 255, 255, 0.05);
+
+    --board-dot-color: #262936;
+    --photo-brightness: 0.88;
+
+    --shadow-card: 0 20px 40px -18px rgba(0, 0, 0, 0.55);
+    --shadow-soft: 0 10px 30px -12px rgba(0, 0, 0, 0.45);
 }

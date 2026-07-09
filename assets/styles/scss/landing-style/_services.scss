@@ -1,0 +1,142 @@
+@use 'variables' as *;
+
+.services-head {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 72px;
+}
+
+.services-head h2 {
+    font-size: clamp(28px, 3.4vw, 40px);
+}
+
+.services-head p {
+    color: var(--color-text-muted);
+    margin-top: 16px;
+    font-size: 16.5px;
+}
+
+.service-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    margin-bottom: 96px;
+}
+
+.service-row:last-child {
+    margin-bottom: 0;
+}
+
+.service-row.reverse .service-visual {
+    order: 2;
+}
+
+.service-tag {
+    display: inline-block;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+}
+
+.tag-orange {
+    background: var(--color-orange-soft);
+    color: var(--color-orange);
+}
+
+.tag-violet {
+    background: var(--color-violet-soft);
+    color: var(--color-violet);
+}
+
+.service-copy h3 {
+    font-size: clamp(24px, 2.6vw, 32px);
+    margin-bottom: 16px;
+    max-width: 420px;
+}
+
+.service-copy>p {
+    color: var(--color-text-muted);
+    font-size: 16px;
+    margin-bottom: 26px;
+    max-width: 440px;
+}
+
+.benefit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 30px;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15px;
+}
+
+.benefit-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    margin-top: 1px;
+}
+
+.check-orange {
+    background: var(--color-orange);
+    color: #fff;
+}
+
+.check-violet {
+    background: var(--color-violet);
+    color: #fff;
+}
+
+.service-visual {
+    border-radius: $radius-lg;
+    height: 400px;
+    position: relative;
+    overflow: hidden;
+}
+
+.visual-emprendedores {
+    /* El color de acento va como una capa semitransparente encima de la foto, así el bloque combina con la paleta en los dos temas. */
+    background: linear-gradient(155deg,
+            color-mix(in srgb, var(--color-orange-soft) 90%, transparent),
+            transparent),
+        url('https://picsum.photos/seed/unimarket-emprendedores/900/700') center/cover;
+    filter: brightness(var(--photo-brightness));
+}
+
+.visual-estudiantes {
+    background: linear-gradient(155deg,
+            color-mix(in srgb, var(--color-violet-soft) 90%, transparent),
+            transparent),
+        url('https://picsum.photos/seed/unimarket-estudiantes/900/700') center/cover;
+    filter: brightness(var(--photo-brightness));
+}
+
+@media (max-width: $bp-services) {
+    .service-row {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+
+    .service-row.reverse .service-visual {
+        order: 0;
+    }
+
+    .service-visual {
+        height: 280px;
+    }
+}
