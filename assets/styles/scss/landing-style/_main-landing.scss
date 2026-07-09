@@ -1,12 +1,10 @@
-/*
-main-landing.scss
-Une todo lo que se hace en landing-style
-*/
+/* Punto de entrada. No tiene estilos propios, solo reúne los parciales en el orden en que aparecen en el HTML. Para compilarlo:
+sass assets/styles/scss/landing-style/style.scss assets/styles/css/style.css */
 
 @use 'variables';
 @use 'base';
 @use 'buttons';
-@use 'nav';
+@use 'header';
 @use 'hero';
 @use 'logo-strip';
 @use 'why';
