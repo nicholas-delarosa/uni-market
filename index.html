@@ -7,18 +7,19 @@
     <link rel="stylesheet" href="assets/styles/css/style.css">
 </head>
 <body>
-    <div class="header">
+    <header>
+        <div class="header">
+            <div class="tabs">
+                <button id="loginAs" class="active">
+                    Iniciar sesión
+                </button>
 
-        <div class="tabs">
-            <button id="loginAs" class="active">
-                Iniciar sesión
-            </button>
-
-            <button id="registerAs">
-                Crear cuenta
-            </button>
+                <button id="registerAs">
+                    Crear cuenta
+                </button>
+            </div>
         </div>
-</div>
+    </header>
 
     <div class="container">
 
@@ -62,6 +63,10 @@
             </form>
         </div>
     </div>
+
+    <footer id="btnMode" class="light-mode">
+        <button id="modeToggle">Cambiar Modo</button>
+    </footer>
     
     <script type="module" src="assets/js/script.js"></script>
 </body>
