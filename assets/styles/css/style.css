@@ -34,6 +34,10 @@ body {
   align-items: center;
 }
 
+.svg {
+  height: 30px;
+}
+
 .container {
   border: 2px solid var(--secondary-color);
   width: 800px;
@@ -83,6 +87,7 @@ body {
   outline: none;
   width: 100%;
   height: 100%;
+  background-color: inherit;
 }
 
 .container-form a {
@@ -91,5 +96,19 @@ body {
   margin-bottom: 20px;
   margin-top: 5px;
 }
+
+.button {
+  width: 170px;
+  height: 45px;
+  font-size: 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  background-color: #8A2BE2;
+  color: white;
+}
+
+/* Animation form*/
 
 /*# sourceMappingURL=style.css.map */
