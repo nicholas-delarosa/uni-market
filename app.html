@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unimarket — Marketplace universitario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles/css/style-app.css">
+</head>
+<body>
+
+<div id="uniSelectorScreen" class="uni-selector">
+  <div class="uni-selector-head">
+    <span class="uni-logo"><span class="uni-logo-mark">U</span>Unimarket</span>
+    <h1>¿Cuál es tu universidad?</h1>
+    <p>Selecciona tu universidad para ver los productos y emprendimientos de tu propia comunidad.</p>
+  </div>
+  <div class="uni-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="uniSearchInput" placeholder="Buscar universidad...">
+  </div>
+  <div class="uni-grid" id="uniGrid"></div>
+  <p class="uni-empty-note" id="uniEmptyNote" style="display:none;">No encontramos esa universidad. ¿La tuya no está? Escríbenos y la sumamos a la red.</p>
+</div>
+
+<div class="app-shell" id="appShell" style="display:none;">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><span class="uni-logo-mark">U</span>Unimarket</div>
+    <nav class="side-nav">
+      <a href="#" class="side-link" data-view="catalog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Catálogo
+      </a>
+      <a href="#" class="side-link" data-view="sellers">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Emprendimientos
+      </a>
+      <a href="#" class="side-link" data-view="profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Mi perfil
+      </a>
+    </nav>
+    <div class="sidebar-uni">
+      <img id="sidebarUniImg" src="" alt="">
+      <button id="sidebarUniSwitch">
+        <div class="sidebar-uni-name" id="sidebarUniName"></div>
+        <div class="sidebar-uni-switch">Cambiar universidad</div>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h2 id="topbarTitle">Catálogo</h2>
+        <p id="topbarSubtitle"></p>
+      </div>
+      <div class="topbar-search" id="topbarSearchWrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar productos...">
+      </div>
+      <div class="topbar-user" data-view="profile">
+        <div class="avatar-sm">V</div>
+        <div>
+          <div class="topbar-user-name">Valentina G.</div>
+          <div class="topbar-user-role">Estudiante</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<nav class="mobile-tabbar" id="mobileTabbar">
+  <a href="#" data-view="catalog">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    Catálogo
+  </a>
+  <a href="#" data-view="sellers">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    Emprendimientos
+  </a>
+  <a href="#" data-view="profile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Perfil
+  </a>
+</nav>
+
+<script type="module" src="/assets/js/app-js/app.js"></script>
+
+</body>
+</html>
