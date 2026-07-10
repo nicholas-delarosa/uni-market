@@ -1,14 +1,14 @@
  /* ================= DATA ================= */
   const universities = [
-    { id:'unorte', name:'Universidad del Norte', logo:'https://picsum.photos/seed/uninorte/200/200' },
-    { id:'cuc', name:'Costa Universidad', logo:'https://picsum.photos/seed/cuc/200/200' },
-    { id:'uniautonoma', name:'Uniautónoma', logo:'https://picsum.photos/seed/uniautonoma/200/200' },
-    { id:'simonbolivar', name:'Simón Bolívar', logo:'https://picsum.photos/seed/simonbolivar/200/200' },
-    { id:'unilibre', name:'Universidad Libre', logo:'https://picsum.photos/seed/unilibre/200/200' },
-    { id:'unimedellin', name:'Univ. de Medellín', logo:'https://picsum.photos/seed/unimedellin/200/200' },
-    { id:'eia', name:'EIA', logo:'https://picsum.photos/seed/eia-board/200/200' },
-    { id:'bolivariana', name:'Bolivariana', logo:'https://picsum.photos/seed/bolivariana/200/200' },
-    { id:'udea', name:'U. de Antioquia', logo:'https://picsum.photos/seed/udea/200/200' },
+    { id:'unorte', name:'Universidad del Norte', logo:'/assets/src/images/UniNorte.png' },
+    { id:'cuc', name:'Costa Universidad', logo:'/assets/src/images/Logo_cuc.png' },
+    { id:'uniautonoma', name:'Uniautónoma', logo:'/assets/src/images/Uniautonoma.png' },
+    { id:'simonbolivar', name:'Simón Bolívar', logo:'/assets/src/images/Simon Bolivar.png' },
+    { id:'unilibre', name:'Universidad Libre', logo:'/assets/src/images/UniLibre.png' },
+    { id:'unimedellin', name:'Univ. de Medellín', logo:'/assets/src/images/UdeMedallo.png' },
+    { id:'eia', name:'EIA', logo:'/assets/src/images/Logo_EIA.png' },
+    { id:'bolivariana', name:'Bolivariana', logo:'/assets/src/images/Bolivariana.jpg' },
+    { id:'udea', name:'U. de Antioquia', logo:'/assets/src/images/UDEA.jpg' },
   ];
 
   const sellers = [
