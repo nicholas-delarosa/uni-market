@@ -1,6 +1,5 @@
-
-@import "_reset";
-@import "_variables";
+@use "_reset";
+@use "_variables";
 
 
   
@@ -360,13 +359,19 @@
     z-index: 9999;
 }
 
+@mixin bg-color($color: #6C63FF){
+    background-color: $color;
+}
+@mixin theme-c($color: white){
+    color: $color;
+}
 .theme-toggle {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     border: none;
-    background: #6C63FF;
-    color: white;
+    @include bg-color();
+    @include text-color();
     display: flex;
     justify-content: center;
     align-items: center;
@@ -383,17 +388,17 @@
 }
 
 
-@mixin bg-color($color:#111827){
-        background-color: $color;
-    };
-
-@mixin text-color($color: #ffffff){
-   text-decoration-color: $color;
-}
 
 
-body.dark-mode {
-    @include bg-color();
+body.dark-mode{
+    --paper: #111827;
+    --white: #1f2937;
     --surface: #1f2937;
-    @include text-color();
+    --ink: #ffffff;
+    --slate: #d1d5db;
+    --slate-light: #9ca3af;
+    --line: #374151;
+
+    background: var(--paper);
+    color: var(--ink);
 }

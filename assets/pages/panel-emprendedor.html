@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel del emprendedor · Unimarket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#7C3AED;
+    --purple-dark:#6D28D9;
+    --purple-soft:#F3EEFE;
+    --pink:#EC4899;
+    --ink:#0F172A;
+    --muted:#64748B;
+    --line:#E6E4ED;
+    --bg:#FFFFFF;
+    --bg-soft:#F8F7FB;
+    --green:#15803D;
+    --green-soft:#ECFDF3;
+    --amber:#B45309;
+    --amber-soft:#FFFBEB;
+    --red:#DC2626;
+    --red-soft:#FEF2F2;
+    --radius:16px;
+    --radius-sm:10px;
+    --shadow:0 1px 2px rgba(15,23,42,.04), 0 12px 28px -14px rgba(15,23,42,.16);
+    --sidebar-w:252px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ink);
+    background:var(--bg-soft);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.num{font-family:'Space Grotesk',system-ui,sans-serif;}
+  button{font-family:inherit;}
+  ul{list-style:none;margin:0;padding:0;}
+  a{color:inherit;text-decoration:none;}
+  input,select,textarea{font-family:inherit;}
+
+  :focus-visible{outline:2px solid var(--purple); outline-offset:2px; border-radius:4px;}
+
+  .icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+
+  /* ---------- layout ---------- */
+  .app{display:flex; min-height:100vh;}
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    width:var(--sidebar-w);
+    flex-shrink:0;
+    background:var(--bg);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    padding:22px 16px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:4px 8px 22px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,var(--purple),var(--pink));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:16px;font-family:'Space Grotesk',sans-serif;
+  }
+  .brand-name{font-weight:700;font-size:17px;letter-spacing:-.01em;}
+
+  .nav-label{font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; padding:14px 12px 8px;}
+  .nav-item{
+    display:flex; align-items:center; gap:11px;
+    padding:9px 12px; border-radius:10px;
+    font-size:14.5px; font-weight:500; color:var(--ink);
+    cursor:pointer; border:none; background:none; width:100%; text-align:left;
+    position:relative;
+  }
+  .nav-item .icon{color:var(--muted);}
+  .nav-item:hover{background:var(--bg-soft);}
+  .nav-item.active{background:var(--purple-soft); color:var(--purple-dark);}
+  .nav-item.active .icon{color:var(--purple);}
+  .nav-badge{
+    margin-left:auto; background:var(--purple); color:#fff; font-size:11px; font-weight:700;
+    padding:1px 7px; border-radius:999px;
+  }
+
+  .sidebar-spacer{flex:1;}
+
+  .store-card{
+    background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:12px; margin-bottom:10px;
+  }
+  .store-card-top{display:flex; align-items:center; gap:10px;}
+  .store-logo{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#FDE68A,#F472B6); flex-shrink:0; display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;color:#fff;font-size:14px;}
+  .store-name{font-weight:600; font-size:13.5px; line-height:1.2;}
+  .store-sub{font-size:11.5px; color:var(--muted);}
+
+  .status-toggle{
+    margin-top:10px; display:flex; align-items:center; justify-content:space-between;
+    background:#fff; border:1px solid var(--line); border-radius:999px; padding:4px 4px 4px 12px;
+  }
+  .status-toggle-label{font-size:12.5px; font-weight:600;}
+  .status-toggle-label.open{color:var(--green);}
+  .status-toggle-label.closed{color:var(--red);}
+  .switch{
+    width:38px; height:22px; border-radius:999px; border:none; cursor:pointer;
+    background:var(--green); position:relative; transition:background .18s ease;
+  }
+  .switch.off{background:#CBD5E1;}
+  .switch::after{
+    content:''; position:absolute; top:2px; left:18px; width:18px; height:18px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:left .18s ease;
+  }
+  .switch.off::after{left:2px;}
+
+  .sidebar-foot{display:flex; flex-direction:column; gap:2px; margin-top:4px;}
+  .foot-link{display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; font-size:13.5px; color:var(--muted); font-weight:500;}
+  .foot-link:hover{background:var(--bg-soft); color:var(--ink);}
+  .foot-link .icon{width:16px;height:16px;}
+
+  /* ---------- main ---------- */
+  .main{flex:1; min-width:0; padding:26px 34px 60px;}
+
+  .topbar{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:26px; gap:20px;}
+  .topbar h1{font-size:26px; margin:0 0 4px; letter-spacing:-.01em;}
+  .topbar p{margin:0; color:var(--muted); font-size:14px;}
+  .topbar-right{display:flex; align-items:center; gap:16px; flex-shrink:0;}
+
+  .bell-btn{position:relative; width:38px;height:38px;border-radius:10px;border:1px solid var(--line); background:#fff; display:flex;align-items:center;justify-content:center; cursor:pointer;}
+  .bell-btn .icon{color:var(--muted);}
+  .bell-dot{position:absolute; top:7px; right:8px; width:7px;height:7px;border-radius:50%; background:var(--red); border:1.5px solid #fff;}
+
+  .user-chip{display:flex; align-items:center; gap:10px;}
+  .avatar{width:38px;height:38px;border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--pink)); color:#fff; display:flex;align-items:center;justify-content:center; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif;}
+  .user-chip-name{font-size:13.5px; font-weight:600; line-height:1.2;}
+  .user-chip-role{font-size:11.5px; color:var(--muted);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- shared bits ---------- */
+  .card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);}
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; padding:10px 16px; border-radius:999px;
+    font-size:13.5px; font-weight:600; border:1px solid transparent; cursor:pointer; white-space:nowrap;
+  }
+  .btn .icon{width:16px;height:16px;}
+  .btn-primary{background:var(--ink); color:#fff;}
+  .btn-primary:hover{background:#000;}
+  .btn-outline{background:#fff; border-color:var(--line); color:var(--ink);}
+  .btn-outline:hover{border-color:#C9C6D6;}
+  .btn-ghost{background:none; color:var(--muted);}
+  .btn-ghost:hover{color:var(--ink);}
+  .btn-danger-ghost{background:none; color:var(--red);}
+  .btn-danger-ghost:hover{background:var(--red-soft);}
+  .btn-sm{padding:7px 12px; font-size:12.5px;}
+
+  .pill{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:999px;}
+  .pill-amber{background:var(--amber-soft); color:var(--amber);}
+  .pill-green{background:var(--green-soft); color:var(--green);}
+  .pill-red{background:var(--red-soft); color:var(--red);}
+  .pill-purple{background:var(--purple-soft); color:var(--purple-dark);}
+  .pill-gray{background:#F1F0F4; color:var(--muted);}
+
+  /* ---------- dashboard ---------- */
+  .banner-closed{
+    display:none; align-items:center; gap:10px; background:var(--red-soft); color:var(--red);
+    border:1px solid #FCA5A5; border-radius:var(--radius-sm); padding:12px 16px; font-size:13.5px; font-weight:500; margin-bottom:20px;
+  }
+  .banner-closed.show{display:flex;}
+  .banner-closed .icon{color:var(--red);}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px;}
+  .stat-card{padding:18px 18px 16px;}
+  .stat-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .stat-icon{width:32px;height:32px;border-radius:9px; display:flex;align-items:center;justify-content:center;}
+  .stat-icon .icon{width:16px;height:16px;}
+  .stat-card:nth-child(1) .stat-icon{background:var(--purple-soft); color:var(--purple);}
+  .stat-card:nth-child(2) .stat-icon{background:var(--green-soft); color:var(--green);}
+  .stat-card:nth-child(3) .stat-icon{background:#FDF2F8; color:var(--pink);}
+  .stat-card:nth-child(4) .stat-icon{background:var(--amber-soft); color:var(--amber);}
+  .stat-num{font-size:24px; font-weight:700; letter-spacing:-.01em; margin-bottom:2px;}
+  .stat-label{font-size:12.5px; color:var(--muted);}
+  .stat-sub{font-size:11.5px; margin-top:8px; font-weight:600;}
+  .stat-sub.up{color:var(--green);}
+  .stat-sub.warn{color:var(--amber);}
+  .stat-card.clickable{cursor:pointer; transition:border-color .15s ease;}
+  .stat-card.clickable:hover{border-color:#C9C6D6;}
+
+  .dash-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:16px; align-items:start;}
+  .panel{padding:18px 18px 8px;}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .panel-head h3{font-size:15px; margin:0;}
+  .panel-head a{font-size:12.5px; color:var(--purple); font-weight:600;}
+
+  .order-row{display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--line);}
+  .order-row:first-child{border-top:none;}
+  .order-id{font-size:12px; color:var(--muted); font-family:'Space Grotesk',sans-serif; width:52px; flex-shrink:0;}
+  .order-info{flex:1; min-width:0;}
+  .order-client{font-size:13.5px; font-weight:600;}
+  .order-items{font-size:12px; color:var(--muted);}
+  .order-total{font-size:13.5px; font-weight:700; font-family:'Space Grotesk',sans-serif; flex-shrink:0;}
+
+  .stock-row{display:flex; align-items:center; gap:11px; padding:11px 0; border-top:1px solid var(--line);}
+  .stock-row:first-child{border-top:none;}
+  .stock-thumb{width:38px;height:38px;border-radius:8px; flex-shrink:0;}
+  .stock-info{flex:1; min-width:0;}
+  .stock-name{font-size:13.5px; font-weight:600;}
+  .stock-qty{font-size:12px; color:var(--muted);}
+
+  .quick-actions{display:flex; gap:10px; margin:20px 0 6px;}
+
+  /* ---------- productos ---------- */
+  .section-toolbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; gap:12px; flex-wrap:wrap;}
+  .search-box{display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--line); border-radius:999px; padding:9px 14px; width:280px;}
+  .search-box input{border:none; outline:none; font-size:13.5px; width:100%;}
+  .search-box .icon{color:var(--muted); width:16px;height:16px;}
+
+  .prod-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px;}
+  .prod-card{overflow:hidden;}
+  .prod-media{height:120px; position:relative;}
+  .prod-badge{position:absolute; top:10px; left:10px; background:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px;}
+  .prod-stockflag{position:absolute; top:10px; right:10px;}
+  .prod-body{padding:13px 14px 15px;}
+  .prod-name{font-size:14px; font-weight:700; margin:0 0 3px;}
+  .prod-price{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; margin-bottom:10px;}
+  .prod-stock{font-size:12px; color:var(--muted); margin-bottom:12px;}
+  .prod-actions{display:flex; gap:8px;}
+  .prod-actions .btn{flex:1; justify-content:center;}
+
+  /* ---------- inventario / pedidos tables ---------- */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  thead th{
+    text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted);
+    font-weight:600; padding:0 16px 10px; border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:13px 16px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  .cell-prod{display:flex; align-items:center; gap:10px; font-weight:600;}
+  .cell-thumb{width:34px;height:34px;border-radius:8px;}
+
+  .qty-control{display:flex; align-items:center; gap:8px;}
+  .qty-btn{width:26px;height:26px;border-radius:7px; border:1px solid var(--line); background:#fff; cursor:pointer; display:flex;align-items:center;justify-content:center;}
+  .qty-btn .icon{width:14px;height:14px;}
+  .qty-val{min-width:20px; text-align:center; font-weight:700;}
+
+  .status-select{
+    border:1px solid var(--line); border-radius:999px; padding:6px 26px 6px 12px; font-size:12.5px; font-weight:600;
+    background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="%2364748B" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center;
+    appearance:none; cursor:pointer;
+  }
+
+  .filter-tabs{display:flex; gap:6px; margin-bottom:18px;}
+  .filter-tab{padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--muted);}
+  .filter-tab.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  /* ---------- mi emprendimiento ---------- */
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:22px;}
+  .form-grid .full{grid-column:1 / -1;}
+  .field label{display:block; font-size:12.5px; font-weight:600; margin-bottom:6px;}
+  .field .hint{font-size:11.5px; color:var(--muted); font-weight:400; margin-left:4px;}
+  .field input, .field select, .field textarea{
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:13.5px; outline:none; background:#fff;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--purple);}
+  .field input[disabled]{background:var(--bg-soft); color:var(--muted);}
+  .field textarea{resize:vertical; min-height:80px;}
+  .form-actions{padding:0 22px 22px; display:flex; gap:10px; justify-content:flex-end;}
+
+  .toggle-block{display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--line); margin-bottom:4px;}
+  .toggle-block-text strong{display:block; font-size:14.5px; margin-bottom:2px;}
+  .toggle-block-text span{font-size:12.5px; color:var(--muted);}
+
+  /* ---------- estadisticas ---------- */
+  .stats-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
+  .bars{display:flex; align-items:flex-end; gap:14px; height:160px; padding:20px 6px 0;}
+  .bar-col{flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end;}
+  .bar{width:100%; max-width:34px; border-radius:7px 7px 3px 3px; background:linear-gradient(180deg,var(--purple),var(--purple-dark));}
+  .bar-day{font-size:11px; color:var(--muted); font-weight:600;}
+
+  .rank-row{display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--line);}
+  .rank-row:first-child{border-top:none;}
+  .rank-num{font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--muted); width:16px;}
+  .rank-info{flex:1;}
+  .rank-name{font-size:13px; font-weight:600; margin-bottom:5px;}
+  .rank-bar-track{height:6px; background:var(--bg-soft); border-radius:999px; overflow:hidden;}
+  .rank-bar-fill{height:100%; background:var(--purple);}
+  .rank-count{font-size:12px; color:var(--muted); font-weight:600; width:44px; text-align:right;}
+
+  .summary-row{display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid var(--line);}
+  .summary-row:first-child{border-top:none;}
+  .summary-row span:first-child{font-size:13px; color:var(--muted);}
+  .summary-row span:last-child{font-weight:700; font-family:'Space Grotesk',sans-serif;}
+
+  /* ---------- modal ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(15,23,42,.45); z-index:50;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{background:#fff; border-radius:18px; width:100%; max-width:460px; max-height:90vh; overflow-y:auto;}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line);}
+  .modal-head h3{margin:0; font-size:16px;}
+  .modal-close{background:none; border:none; cursor:pointer; color:var(--muted); width:30px;height:30px; display:flex;align-items:center;justify-content:center; border-radius:8px;}
+  .modal-close:hover{background:var(--bg-soft);}
+  .modal-body{padding:20px;}
+  .modal-body .field{margin-bottom:14px;}
+  .modal-foot{padding:16px 20px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end;}
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .empty-state{text-align:center; padding:50px 20px; color:var(--muted);}
+  .empty-state .icon{width:34px;height:34px; margin-bottom:10px; color:#C9C6D6;}
+  .empty-state p{font-size:13.5px; margin:0;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:980px){
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .dash-grid{grid-template-columns:1fr;}
+    .stats-grid{grid-template-columns:1fr;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:760px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%; height:auto; position:relative; flex-direction:row; align-items:center; overflow-x:auto; padding:12px 14px; gap:14px;}
+    .brand{padding:0; flex-shrink:0;}
+    .nav-label{display:none;}
+    .sidebar > ul{display:flex; gap:4px;}
+    .nav-item{flex-direction:column; gap:4px; font-size:10.5px; padding:6px 10px;}
+    .sidebar-spacer, .store-card, .sidebar-foot{display:none;}
+    .main{padding:20px 16px 40px;}
+    .stat-grid{grid-template-columns:1fr 1fr;}
+    .topbar{flex-direction:column;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ ICONS ============ -->
+<svg width="0" height="0" style="position:absolute">
+<defs>
+<symbol id="ic-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></symbol>
+<symbol id="ic-store" viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v4"/><path d="M3 9h18l-1.2 3.4a2 2 0 0 1-1.9 1.3H6.1a2 2 0 0 1-1.9-1.3L3 9Z"/><path d="M5 13.7V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5.3"/><path d="M10 20v-4h4v4"/></symbol>
+<symbol id="ic-box" viewBox="0 0 24 24"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/></symbol>
+<symbol id="ic-layers" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="M3 12l9 5 9-5"/><path d="M3 16l9 5 9-5"/></symbol>
+<symbol id="ic-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></symbol>
+<symbol id="ic-chart" viewBox="0 0 24 24"><path d="M4 20V10M12 20V4M20 20v-7"/></symbol>
+<symbol id="ic-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8Z"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></symbol>
+<symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="ic-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="ic-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="m16.5 3.5 4 4L7 21l-4.5 1L4 17.5 16.5 3.5Z"/></symbol>
+<symbol id="ic-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></symbol>
+<symbol id="ic-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="ic-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+<symbol id="ic-logout" viewBox="0 0 24 24"><path d="M9 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+<symbol id="ic-alert" viewBox="0 0 24 24"><path d="M12 9v4"/><circle cx="12" cy="16.2" r=".3" fill="currentColor" stroke="none"/><path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></symbol>
+<symbol id="ic-pkg-empty" viewBox="0 0 24 24"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v9l9 5 9-5V8"/></symbol>
+</defs>
+</svg>
+
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">U</div>
+      <div class="brand-name">Unimarket</div>
+    </div>
+
+    <div class="nav-label">Panel del emprendedor</div>
+    <ul>
+      <li><button class="nav-item active" data-view="dashboard"><svg class="icon"><use href="#ic-home"/></svg>Inicio</button></li>
+      <li><button class="nav-item" data-view="emprendimiento"><svg class="icon"><use href="#ic-store"/></svg>Mi tienda</button></li>
+      <li><button class="nav-item" data-view="productos"><svg class="icon"><use href="#ic-box"/></svg>Productos</button></li>
+      <li><button class="nav-item" data-view="inventario"><svg class="icon"><use href="#ic-layers"/></svg>Inventario</button></li>
+      <li><button class="nav-item" data-view="pedidos"><svg class="icon"><use href="#ic-receipt"/></svg>Pedidos<span class="nav-badge" id="nav-pedidos-badge">2</span></button></li>
+      <li><button class="nav-item" data-view="estadisticas"><svg class="icon"><use href="#ic-chart"/></svg>Estadísticas</button></li>
+    </ul>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="store-card">
+      <div class="store-card-top">
+        <div class="store-logo">PC</div>
+        <div>
+          <div class="store-name">Postres Camila</div>
+          <div class="store-sub">Universidad del Norte</div>
+        </div>
+      </div>
+      <div class="status-toggle">
+        <span class="status-toggle-label open" id="status-label">Tienda abierta</span>
+        <button class="switch" id="status-switch" aria-pressed="true" aria-label="Cambiar estado de la tienda"></button>
+      </div>
+    </div>
+
+    <div class="sidebar-foot">
+      <a class="foot-link" href="#"><svg class="icon"><use href="#ic-arrow-left"/></svg>Volver al marketplace</a>
+      <a class="foot-link" href="#"><svg class="icon"><use href="#ic-logout"/></svg>Cerrar sesión</a>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="page-title">Hola, Camila 👋</h1>
+        <p id="page-subtitle">Esto es lo que pasa hoy en Postres Camila.</p>
+      </div>
+      <div class="topbar-right">
+        <button class="bell-btn" aria-label="Notificaciones"><svg class="icon"><use href="#ic-bell"/></svg><span class="bell-dot"></span></button>
+        <div class="user-chip">
+          <div class="avatar">CR</div>
+          <div>
+            <div class="user-chip-name">Camila R.</div>
+            <div class="user-chip-role">Emprendedora</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= DASHBOARD ================= -->
+    <section class="view active" id="view-dashboard">
+      <div class="banner-closed" id="closed-banner">
+        <svg class="icon"><use href="#ic-alert"/></svg>
+        Tu tienda está marcada como <strong>cerrada</strong>: no puedes recibir pedidos nuevos hasta que la abras de nuevo.
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <div class="stat-top"><span class="stat-label">Pedidos de hoy</span><div class="stat-icon"><svg class="icon"><use href="#ic-receipt"/></svg></div></div>
+          <div class="stat-num">4</div>
+          <div class="stat-sub warn">2 pendientes por confirmar</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-top"><span class="stat-label">Ingresos del mes</span><div class="stat-icon"><svg class="icon"><use href="#ic-chart"/></svg></div></div>
+          <div class="stat-num">$486.000</div>
+          <div class="stat-sub up">↑ 12% vs. mes anterior</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-top"><span class="stat-label">Producto estrella</span><div class="stat-icon"><svg class="icon"><use href="#ic-box"/></svg></div></div>
+          <div class="stat-num" style="font-size:16px;">Cheesecake individual</div>
+          <div class="stat-sub" style="color:var(--muted);">18 vendidos este mes</div>
+        </div>
+        <div class="card stat-card clickable" onclick="switchView('inventario')">
+          <div class="stat-top"><span class="stat-label">Bajo inventario</span><div class="stat-icon"><svg class="icon"><use href="#ic-alert"/></svg></div></div>
+          <div class="stat-num">2 productos</div>
+          <div class="stat-sub warn">Revisa el stock →</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="card panel">
+          <div class="panel-head"><h3>Pedidos recientes</h3><a href="#" onclick="switchView('pedidos');return false;">Ver todos</a></div>
+          <div class="order-row">
+            <span class="order-id">#1023</span>
+            <div class="order-info"><div class="order-client">Valentina G.</div><div class="order-items">2x Cheesecake individual</div></div>
+            <span class="pill pill-amber">Pendiente</span>
+            <span class="order-total">$28.000</span>
+          </div>
+          <div class="order-row">
+            <span class="order-id">#1022</span>
+            <div class="order-info"><div class="order-client">Andrés R.</div><div class="order-items">1x Brownie + 1x Torta choc.</div></div>
+            <span class="pill pill-purple">Confirmado</span>
+            <span class="order-total">$53.500</span>
+          </div>
+          <div class="order-row">
+            <span class="order-id">#1021</span>
+            <div class="order-info"><div class="order-client">Camila P.</div><div class="order-items">3x Galletas de avena</div></div>
+            <span class="pill pill-green">Entregado</span>
+            <span class="order-total">$18.000</span>
+          </div>
+          <div class="order-row">
+            <span class="order-id">#1020</span>
+            <div class="order-info"><div class="order-client">Julián M.</div><div class="order-items">1x Cheesecake individual</div></div>
+            <span class="pill pill-amber">Pendiente</span>
+            <span class="order-total">$14.000</span>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <div class="panel-head"><h3>Bajo inventario</h3><a href="#" onclick="switchView('inventario');return false;">Ver todo</a></div>
+          <div class="stock-row">
+            <div class="stock-thumb" style="background:linear-gradient(135deg,#DDD6FE,#A78BFA);"></div>
+            <div class="stock-info"><div class="stock-name">Brownie con nutella</div><div class="stock-qty">Quedan 3 unidades</div></div>
+            <span class="pill pill-amber">Bajo</span>
+          </div>
+          <div class="stock-row">
+            <div class="stock-thumb" style="background:linear-gradient(135deg,#FDE68A,#FCA5A5);"></div>
+            <div class="stock-info"><div class="stock-name">Galletas de avena</div><div class="stock-qty">Sin existencias</div></div>
+            <span class="pill pill-red">Agotado</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="btn btn-primary" onclick="openProductModal()"><svg class="icon"><use href="#ic-plus"/></svg>Agregar producto</button>
+        <button class="btn btn-outline" onclick="switchView('pedidos')">Ver todos los pedidos</button>
+      </div>
+    </section>
+
+    <!-- ================= MI TIENDA ================= -->
+    <section class="view" id="view-emprendimiento">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="toggle-block">
+          <div class="toggle-block-text">
+            <strong>Estado de la tienda</strong>
+            <span id="store-status-desc">Tu tienda está abierta y puede recibir pedidos nuevos.</span>
+          </div>
+          <div class="status-toggle" style="background:none;border:none;padding:0;">
+            <span class="status-toggle-label open" id="status-label-2" style="margin-right:10px;">Abierta</span>
+            <button class="switch" id="status-switch-2" aria-pressed="true" aria-label="Cambiar estado de la tienda"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="form-grid">
+          <div class="field"><label>Nombre del emprendimiento</label><input type="text" value="Postres Camila"></div>
+          <div class="field"><label>Categoría principal</label>
+            <select>
+              <option>Comida</option><option>Diseño</option><option>Tecnología</option><option>Servicios</option><option>Moda</option>
+            </select>
+          </div>
+          <div class="field"><label>Universidad <span class="hint">(fija, no editable)</span></label><input type="text" value="Universidad del Norte" disabled></div>
+          <div class="field"><label>WhatsApp de contacto</label><input type="text" value="+57 300 123 4567"></div>
+          <div class="field"><label>Hora de apertura</label><input type="time" value="08:00"></div>
+          <div class="field"><label>Hora de cierre</label><input type="time" value="18:00"></div>
+          <div class="field full"><label>Descripción</label><textarea>Postres artesanales hechos en casa: cheesecakes, brownies y tortas por encargo, listos para recoger en el bloque de Ingeniería.</textarea></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline">Cancelar</button>
+          <button class="btn btn-primary">Guardar cambios</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PRODUCTOS ================= -->
+    <section class="view" id="view-productos">
+      <div class="section-toolbar">
+        <div class="search-box"><svg class="icon"><use href="#ic-search"/></svg><input type="text" placeholder="Buscar en mis productos..."></div>
+        <button class="btn btn-primary" onclick="openProductModal()"><svg class="icon"><use href="#ic-plus"/></svg>Agregar producto</button>
+      </div>
+
+      <div class="prod-grid">
+        <div class="card prod-card">
+          <div class="prod-media" style="background:linear-gradient(135deg,#FCD9B6,#F7B267);">
+            <span class="prod-badge">Comida</span>
+            <span class="prod-stockflag pill pill-green">En stock</span>
+          </div>
+          <div class="prod-body">
+            <div class="prod-name">Cheesecake individual</div>
+            <div class="prod-price">$14.000</div>
+            <div class="prod-stock">12 unidades disponibles</div>
+            <div class="prod-actions">
+              <button class="btn btn-outline btn-sm" onclick="openProductModal('Cheesecake individual','Comida',14000,12)"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+              <button class="btn btn-danger-ghost btn-sm" onclick="confirmDelete('Cheesecake individual')"><svg class="icon"><use href="#ic-trash"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card prod-card">
+          <div class="prod-media" style="background:linear-gradient(135deg,#DDD6FE,#A78BFA);">
+            <span class="prod-badge">Comida</span>
+            <span class="prod-stockflag pill pill-amber">Bajo</span>
+          </div>
+          <div class="prod-body">
+            <div class="prod-name">Brownie con nutella</div>
+            <div class="prod-price">$8.500</div>
+            <div class="prod-stock">3 unidades disponibles</div>
+            <div class="prod-actions">
+              <button class="btn btn-outline btn-sm" onclick="openProductModal('Brownie con nutella','Comida',8500,3)"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+              <button class="btn btn-danger-ghost btn-sm" onclick="confirmDelete('Brownie con nutella')"><svg class="icon"><use href="#ic-trash"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card prod-card">
+          <div class="prod-media" style="background:linear-gradient(135deg,#B7E4C7,#74C69D);">
+            <span class="prod-badge">Comida</span>
+            <span class="prod-stockflag pill pill-purple">$45.000</span>
+          </div>
+          <div class="prod-body">
+            <div class="prod-name">Torta de chocolate</div>
+            <div class="prod-price">$45.000</div>
+            <div class="prod-stock">5 unidades disponibles</div>
+            <div class="prod-actions">
+              <button class="btn btn-outline btn-sm" onclick="openProductModal('Torta de chocolate','Comida',45000,5)"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+              <button class="btn btn-danger-ghost btn-sm" onclick="confirmDelete('Torta de chocolate')"><svg class="icon"><use href="#ic-trash"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card prod-card">
+          <div class="prod-media" style="background:linear-gradient(135deg,#FDE68A,#FCA5A5); opacity:.55;">
+            <span class="prod-badge">Comida</span>
+            <span class="prod-stockflag pill pill-red">Agotado</span>
+          </div>
+          <div class="prod-body">
+            <div class="prod-name">Galletas de avena</div>
+            <div class="prod-price">$6.000</div>
+            <div class="prod-stock">Sin existencias</div>
+            <div class="prod-actions">
+              <button class="btn btn-outline btn-sm" onclick="openProductModal('Galletas de avena','Comida',6000,0)"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+              <button class="btn btn-danger-ghost btn-sm" onclick="confirmDelete('Galletas de avena')"><svg class="icon"><use href="#ic-trash"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= INVENTARIO ================= -->
+    <section class="view" id="view-inventario">
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr><th>Producto</th><th>Categoría</th><th>Stock actual</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="cell-prod"><div class="cell-thumb" style="background:linear-gradient(135deg,#FCD9B6,#F7B267);"></div>Cheesecake individual</div></td>
+              <td>Comida</td>
+              <td><div class="qty-control"><button class="qty-btn"><svg class="icon"><use href="#ic-minus"/></svg></button><span class="qty-val">12</span><button class="qty-btn"><svg class="icon"><use href="#ic-plus"/></svg></button></div></td>
+              <td><span class="pill pill-green">En stock</span></td>
+              <td><a href="#" style="font-size:12.5px;font-weight:600;color:var(--purple);">Editar producto</a></td>
+            </tr>
+            <tr>
+              <td><div class="cell-prod"><div class="cell-thumb" style="background:linear-gradient(135deg,#DDD6FE,#A78BFA);"></div>Brownie con nutella</div></td>
+              <td>Comida</td>
+              <td><div class="qty-control"><button class="qty-btn"><svg class="icon"><use href="#ic-minus"/></svg></button><span class="qty-val">3</span><button class="qty-btn"><svg class="icon"><use href="#ic-plus"/></svg></button></div></td>
+              <td><span class="pill pill-amber">Bajo</span></td>
+              <td><a href="#" style="font-size:12.5px;font-weight:600;color:var(--purple);">Editar producto</a></td>
+            </tr>
+            <tr>
+              <td><div class="cell-prod"><div class="cell-thumb" style="background:linear-gradient(135deg,#B7E4C7,#74C69D);"></div>Torta de chocolate</div></td>
+              <td>Comida</td>
+              <td><div class="qty-control"><button class="qty-btn"><svg class="icon"><use href="#ic-minus"/></svg></button><span class="qty-val">5</span><button class="qty-btn"><svg class="icon"><use href="#ic-plus"/></svg></button></div></td>
+              <td><span class="pill pill-green">En stock</span></td>
+              <td><a href="#" style="font-size:12.5px;font-weight:600;color:var(--purple);">Editar producto</a></td>
+            </tr>
+            <tr>
+              <td><div class="cell-prod"><div class="cell-thumb" style="background:linear-gradient(135deg,#FDE68A,#FCA5A5);"></div>Galletas de avena</div></td>
+              <td>Comida</td>
+              <td><div class="qty-control"><button class="qty-btn"><svg class="icon"><use href="#ic-minus"/></svg></button><span class="qty-val">0</span><button class="qty-btn"><svg class="icon"><use href="#ic-plus"/></svg></button></div></td>
+              <td><span class="pill pill-red">Agotado</span></td>
+              <td><a href="#" style="font-size:12.5px;font-weight:600;color:var(--purple);">Editar producto</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= PEDIDOS ================= -->
+    <section class="view" id="view-pedidos">
+      <div class="filter-tabs">
+        <button class="filter-tab active">Todos</button>
+        <button class="filter-tab">Pendientes</button>
+        <button class="filter-tab">Confirmados</button>
+        <button class="filter-tab">Entregados</button>
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr><th>Pedido</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Fecha</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;">#1023</td>
+              <td>Valentina G.</td>
+              <td>2x Cheesecake individual</td>
+              <td style="font-weight:700;">$28.000</td>
+              <td style="color:var(--muted);">Hoy, 10:14 a.m.</td>
+              <td>
+                <select class="status-select">
+                  <option selected>Pendiente</option><option>Confirmado</option><option>Entregado</option><option>Cancelado</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;">#1022</td>
+              <td>Andrés R.</td>
+              <td>1x Brownie, 1x Torta choc.</td>
+              <td style="font-weight:700;">$53.500</td>
+              <td style="color:var(--muted);">Hoy, 9:02 a.m.</td>
+              <td>
+                <select class="status-select">
+                  <option>Pendiente</option><option selected>Confirmado</option><option>Entregado</option><option>Cancelado</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;">#1021</td>
+              <td>Camila P.</td>
+              <td>3x Galletas de avena</td>
+              <td style="font-weight:700;">$18.000</td>
+              <td style="color:var(--muted);">Ayer, 4:40 p.m.</td>
+              <td>
+                <select class="status-select">
+                  <option>Pendiente</option><option>Confirmado</option><option selected>Entregado</option><option>Cancelado</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;">#1020</td>
+              <td>Julián M.</td>
+              <td>1x Cheesecake individual</td>
+              <td style="font-weight:700;">$14.000</td>
+              <td style="color:var(--muted);">Ayer, 1:15 p.m.</td>
+              <td>
+                <select class="status-select">
+                  <option selected>Pendiente</option><option>Confirmado</option><option>Entregado</option><option>Cancelado</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= ESTADISTICAS ================= -->
+    <section class="view" id="view-estadisticas">
+      <div class="stats-grid">
+        <div class="card panel">
+          <div class="panel-head"><h3>Ventas de la semana</h3></div>
+          <div class="bars">
+            <div class="bar-col"><div class="bar" style="height:38%;"></div><span class="bar-day">Lun</span></div>
+            <div class="bar-col"><div class="bar" style="height:52%;"></div><span class="bar-day">Mar</span></div>
+            <div class="bar-col"><div class="bar" style="height:30%;"></div><span class="bar-day">Mié</span></div>
+            <div class="bar-col"><div class="bar" style="height:70%;"></div><span class="bar-day">Jue</span></div>
+            <div class="bar-col"><div class="bar" style="height:60%;"></div><span class="bar-day">Vie</span></div>
+            <div class="bar-col"><div class="bar" style="height:95%;"></div><span class="bar-day">Sáb</span></div>
+            <div class="bar-col"><div class="bar" style="height:44%;"></div><span class="bar-day">Dom</span></div>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <div class="panel-head"><h3>Productos más vendidos</h3></div>
+          <div class="rank-row">
+            <span class="rank-num">1</span>
+            <div class="rank-info"><div class="rank-name">Cheesecake individual</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:90%;"></div></div></div>
+            <span class="rank-count">18</span>
+          </div>
+          <div class="rank-row">
+            <span class="rank-num">2</span>
+            <div class="rank-info"><div class="rank-name">Torta de chocolate</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:55%;"></div></div></div>
+            <span class="rank-count">11</span>
+          </div>
+          <div class="rank-row">
+            <span class="rank-num">3</span>
+            <div class="rank-info"><div class="rank-name">Brownie con nutella</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:40%;"></div></div></div>
+            <span class="rank-count">8</span>
+          </div>
+        </div>
+
+        <div class="card panel" style="grid-column:1 / -1;">
+          <div class="panel-head"><h3>Resumen de pedidos</h3></div>
+          <div class="summary-row"><span>Pedidos completados</span><span style="color:var(--green);">32</span></div>
+          <div class="summary-row"><span>Pedidos pendientes</span><span style="color:var(--amber);">2</span></div>
+          <div class="summary-row"><span>Pedidos cancelados</span><span style="color:var(--red);">1</span></div>
+          <div class="summary-row"><span>Total del mes</span><span>$486.000</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ MODAL: AGREGAR / EDITAR PRODUCTO ============ -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="product-modal-title">Agregar producto</h3>
+      <button class="modal-close" onclick="closeProductModal()"><svg class="icon"><use href="#ic-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Nombre del producto</label><input type="text" id="pm-nombre" placeholder="Ej: Cheesecake individual"></div>
+      <div class="two-col">
+        <div class="field"><label>Categoría</label>
+          <select id="pm-categoria">
+            <option>Comida</option><option>Diseño</option><option>Tecnología</option><option>Servicios</option><option>Moda</option>
+          </select>
+        </div>
+        <div class="field"><label>Precio (COP)</label><input type="number" id="pm-precio" placeholder="14000"></div>
+      </div>
+      <div class="field"><label>Stock inicial</label><input type="number" id="pm-stock" placeholder="10"></div>
+      <div class="field"><label>Descripción</label><textarea id="pm-desc" placeholder="Cuéntale al comprador qué incluye este producto..."></textarea></div>
+      <div class="field"><label>Imagen <span class="hint">(URL, opcional en este mock)</span></label><input type="text" id="pm-img" placeholder="https://..."></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeProductModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: CONFIRMAR ELIMINAR ============ -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-head">
+      <h3>Eliminar producto</h3>
+      <button class="modal-close" onclick="closeDeleteModal()"><svg class="icon"><use href="#ic-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0;font-size:13.5px;color:var(--muted);">¿Seguro que quieres eliminar <strong id="delete-product-name" style="color:var(--ink);"></strong>? Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn btn-primary" style="background:var(--red);" onclick="closeDeleteModal()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   PANEL DEL EMPRENDEDOR — lógica de interfaz
+   -------------------------------------------------------------------------
+   Este archivo funciona de forma independiente con datos de ejemplo.
+   Los puntos marcados con "// [DB]" son donde el equipo de base de datos
+   debe reemplazar la lógica simulada por llamadas reales al backend
+   (fetch a /api/...), sin tener que tocar el resto del código.
+   ========================================================================= */
+
+/* ---------- navegación entre secciones ---------- */
+const pageMeta = {
+  dashboard:      { title: 'Hola, Camila 👋', subtitle: 'Esto es lo que pasa hoy en Postres Camila.' },
+  emprendimiento: { title: 'Mi tienda', subtitle: 'Edita la información pública de tu emprendimiento.' },
+  productos:      { title: 'Productos', subtitle: 'Administra lo que ofreces en tu tienda.' },
+  inventario:     { title: 'Inventario', subtitle: 'Controla las existencias de cada producto.' },
+  pedidos:        { title: 'Pedidos', subtitle: 'Revisa y actualiza el estado de tus pedidos.' },
+  estadisticas:   { title: 'Estadísticas', subtitle: 'El desempeño de tu tienda de un vistazo.' },
+};
+
+function switchView(view){
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.getElementById('page-title').textContent = pageMeta[view].title;
+  document.getElementById('page-subtitle').textContent = pageMeta[view].subtitle;
+}
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => switchView(btn.dataset.view));
+});
+
+/* ---------- estado abierto / cerrado de la tienda ---------- */
+// [DB] al conectar backend: enviar PATCH /api/emprendimientos/:id { abierto: bool }
+let tiendaAbierta = true;
+
+function pintarEstadoTienda(){
+  const sw1 = document.getElementById('status-switch');
+  const sw2 = document.getElementById('status-switch-2');
+  const lbl1 = document.getElementById('status-label');
+  const lbl2 = document.getElementById('status-label-2');
+  const banner = document.getElementById('closed-banner');
+  const desc = document.getElementById('store-status-desc');
+
+  [sw1, sw2].forEach(sw => { sw.classList.toggle('off', !tiendaAbierta); sw.setAttribute('aria-pressed', tiendaAbierta); });
+
+  lbl1.textContent = tiendaAbierta ? 'Tienda abierta' : 'Tienda cerrada';
+  lbl1.classList.toggle('open', tiendaAbierta);
+  lbl1.classList.toggle('closed', !tiendaAbierta);
+
+  lbl2.textContent = tiendaAbierta ? 'Abierta' : 'Cerrada';
+  lbl2.classList.toggle('open', tiendaAbierta);
+  lbl2.classList.toggle('closed', !tiendaAbierta);
+
+  banner.classList.toggle('show', !tiendaAbierta);
+  desc.textContent = tiendaAbierta
+    ? 'Tu tienda está abierta y puede recibir pedidos nuevos.'
+    : 'Tu tienda está cerrada. No se aceptarán pedidos nuevos hasta que la abras.';
+}
+
+function toggleTienda(){
+  tiendaAbierta = !tiendaAbierta;
+  pintarEstadoTienda();
+  // [DB]: aquí va la llamada real para persistir el cambio, ej.
+  // fetch(`/api/emprendimientos/${id}`, { method:'PATCH', body: JSON.stringify({ abierto: tiendaAbierta }) })
+}
+document.getElementById('status-switch').addEventListener('click', toggleTienda);
+document.getElementById('status-switch-2').addEventListener('click', toggleTienda);
+pintarEstadoTienda();
+
+/* ---------- modal: agregar / editar producto ---------- */
+// [DB] al guardar: POST /api/productos (nuevo) o PUT /api/productos/:id (edición)
+function openProductModal(nombre, categoria, precio, stock){
+  const editing = nombre !== undefined;
+  document.getElementById('product-modal-title').textContent = editing ? 'Editar producto' : 'Agregar producto';
+  document.getElementById('pm-nombre').value = editing ? nombre : '';
+  document.getElementById('pm-categoria').value = editing ? categoria : 'Comida';
+  document.getElementById('pm-precio').value = editing ? precio : '';
+  document.getElementById('pm-stock').value = editing ? stock : '';
+  document.getElementById('pm-desc').value = '';
+  document.getElementById('pm-img').value = '';
+  document.getElementById('product-modal').classList.add('show');
+}
+function closeProductModal(){
+  document.getElementById('product-modal').classList.remove('show');
+}
+function saveProduct(){
+  const nombre = document.getElementById('pm-nombre').value.trim();
+  if(!nombre){
+    alert('El producto necesita un nombre.');
+    return;
+  }
+  // [DB]: reemplazar este bloque por el guardado real en la base de datos.
+  // Por ahora solo cerramos el modal para simular que se guardó.
+  closeProductModal();
+}
+
+/* ---------- modal: confirmar eliminación ---------- */
+// [DB] al confirmar: DELETE /api/productos/:id
+function confirmDelete(nombre){
+  document.getElementById('delete-product-name').textContent = nombre;
+  document.getElementById('delete-modal').classList.add('show');
+}
+function closeDeleteModal(){
+  document.getElementById('delete-modal').classList.remove('show');
+}
+
+/* cerrar modales haciendo click fuera de ellos */
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('show'); });
+});
+
+/* ---------- filtros de pedidos (tabs) ---------- */
+document.querySelectorAll('.filter-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    // [DB]: al conectar backend, volver a pedir /api/pedidos?estado=... según el tab activo
+  });
+});
+
+/* ---------- +/- de inventario ---------- */
+// [DB] al hacer clic: PATCH /api/inventario/:id { cantidad }
+document.querySelectorAll('.qty-control').forEach(control => {
+  const [minusBtn, valSpan, plusBtn] = control.children;
+  minusBtn.addEventListener('click', () => {
+    const val = Math.max(0, parseInt(valSpan.textContent) - 1);
+    valSpan.textContent = val;
+  });
+  plusBtn.addEventListener('click', () => {
+    valSpan.textContent = parseInt(valSpan.textContent) + 1;
+  });
+});
+</script>
+</body>
+</html>
