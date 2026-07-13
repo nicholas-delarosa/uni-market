@@ -114,10 +114,10 @@
         </div>
         <div class="card stat-card">
           <div class="stat-top"><span class="stat-label">Producto estrella</span><div class="stat-icon"><svg class="icon"><use href="#ic-box"/></svg></div></div>
-          <div class="stat-num" style="font-size:16px;">Cheesecake individual</div>
-          <div class="stat-sub" style="color:var(--muted);">18 vendidos este mes</div>
+          <div class="stat-num stat-num-sm">Cheesecake individual</div>
+          <div class="stat-sub">18 vendidos este mes</div>
         </div>
-        <div class="card stat-card clickable" onclick="switchView('inventario')">
+        <div class="card stat-card clickable" data-view="inventario">
           <div class="stat-top"><span class="stat-label">Bajo inventario</span><div class="stat-icon"><svg class="icon"><use href="#ic-alert"/></svg></div></div>
           <div class="stat-num">2 productos</div>
           <div class="stat-sub warn">Revisa el stock →</div>
@@ -126,7 +126,7 @@
 
       <div class="dash-grid">
         <div class="card panel">
-          <div class="panel-head"><h3>Pedidos recientes</h3><a href="#" onclick="switchView('pedidos');return false;">Ver todos</a></div>
+          <div class="panel-head"><h3>Pedidos recientes</h3><a href="#" data-view="pedidos">Ver todos</a></div>
           <div class="order-row">
             <span class="order-id">#1023</span>
             <div class="order-info"><div class="order-client">Valentina G.</div><div class="order-items">2x Cheesecake individual</div></div>
@@ -136,7 +136,7 @@
           <div class="order-row">
             <span class="order-id">#1022</span>
             <div class="order-info"><div class="order-client">Andrés R.</div><div class="order-items">1x Brownie + 1x Torta choc.</div></div>
-            <span class="pill pill-purple">Confirmado</span>
+            <span class="pill pill-violet">Confirmado</span>
             <span class="order-total">$53.500</span>
           </div>
           <div class="order-row">
@@ -154,7 +154,7 @@
         </div>
 
         <div class="card panel">
-          <div class="panel-head"><h3>Bajo inventario</h3><a href="#" onclick="switchView('inventario');return false;">Ver todo</a></div>
+          <div class="panel-head"><h3>Bajo inventario</h3><a href="#" data-view="inventario">Ver todo</a></div>
           <div class="stock-row">
             <div class="stock-thumb" style="background:linear-gradient(135deg,#DDD6FE,#A78BFA);"></div>
             <div class="stock-info"><div class="stock-name">Brownie con nutella</div><div class="stock-qty">Quedan 3 unidades</div></div>
@@ -169,8 +169,8 @@
       </div>
 
       <div class="quick-actions">
-        <button class="btn btn-primary" onclick="openProductModal()"><svg class="icon"><use href="#ic-plus"/></svg>Agregar producto</button>
-        <button class="btn btn-outline" onclick="switchView('pedidos')">Ver todos los pedidos</button>
+        <button class="btn btn-primary" data-open-product-modal><svg class="icon"><use href="#ic-plus"/></svg>Agregar producto</button>
+        <button class="btn btn-outline" data-view="pedidos">Ver todos los pedidos</button>
       </div>
     </section>
 
@@ -182,7 +182,7 @@
             <strong>Estado de la tienda</strong>
             <span id="store-status-desc">Tu tienda está abierta y puede recibir pedidos nuevos.</span>
           </div>
-          <div class="status-toggle" style="background:none;border:none;padding:0;">
+          <div class="status-toggle status-toggle-plain">
             <span class="status-toggle-label open" id="status-label-2" style="margin-right:10px;">Abierta</span>
             <button class="switch" id="status-switch-2" aria-pressed="true" aria-label="Cambiar estado de la tienda"></button>
           </div>
@@ -214,7 +214,7 @@
     <section class="view" id="view-productos">
       <div class="section-toolbar">
         <div class="search-box"><svg class="icon"><use href="#ic-search"/></svg><input type="text" placeholder="Buscar en mis productos..."></div>
-        <button class="btn btn-primary" onclick="openProductModal()"><svg class="icon"><use href="#ic-plus"/></svg>Agregar producto</button>
+        <button class="btn btn-primary" data-open-product-modal><svg class="icon"><use href="#ic-plus"/></svg>Agregar producto</button>
       </div>
 
       <div class="prod-grid">
@@ -228,8 +228,8 @@
             <div class="prod-price">$14.000</div>
             <div class="prod-stock">12 unidades disponibles</div>
             <div class="prod-actions">
-              <button class="btn btn-outline btn-sm" onclick="openProductModal('Cheesecake individual','Comida',14000,12)"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
-              <button class="btn btn-danger-ghost btn-sm" onclick="confirmDelete('Cheesecake individual')"><svg class="icon"><use href="#ic-trash"/></svg></button>
+              <button class="btn btn-outline btn-sm" data-edit-product data-name="Cheesecake individual" data-categoria="Comida" data-precio="14000" data-stock="12"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+              <button class="btn btn-danger-ghost btn-sm" data-delete-product="Cheesecake individual"><svg class="icon"><use href="#ic-trash"/></svg></button>
             </div>
           </div>
         </div>
@@ -244,8 +244,8 @@
             <div class="prod-price">$8.500</div>
             <div class="prod-stock">3 unidades disponibles</div>
             <div class="prod-actions">
-              <button class="btn btn-outline btn-sm" onclick="openProductModal('Brownie con nutella','Comida',8500,3)"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
-              <button class="btn btn-danger-ghost btn-sm" onclick="confirmDelete('Brownie con nutella')"><svg class="icon"><use href="#ic-trash"/></svg></button>
+              <button class="btn btn-outline btn-sm" data-edit-product data-name="Brownie con nutella" data-categoria="Comida" data-precio="8500" data-stock="3"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+              <button class="btn btn-danger-ghost btn-sm" data-delete-product="Brownie con nutella"><svg class="icon"><use href="#ic-trash"/></svg></button>
             </div>
           </div>
         </div>
@@ -253,15 +253,15 @@
         <div class="card prod-card">
           <div class="prod-media" style="background:linear-gradient(135deg,#B7E4C7,#74C69D);">
             <span class="prod-badge">Comida</span>
-            <span class="prod-stockflag pill pill-purple">$45.000</span>
+            <span class="prod-stockflag pill pill-green">En stock</span>
           </div>
           <div class="prod-body">
             <div class="prod-name">Torta de chocolate</div>
             <div class="prod-price">$45.000</div>
             <div class="prod-stock">5 unidades disponibles</div>
             <div class="prod-actions">
-              <button class="btn btn-outline btn-sm" onclick="openProductModal('Torta de chocolate','Comida',45000,5)"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
-              <button class="btn btn-danger-ghost btn-sm" onclick="confirmDelete('Torta de chocolate')"><svg class="icon"><use href="#ic-trash"/></svg></button>
+              <button class="btn btn-outline btn-sm" data-edit-product data-name="Torta de chocolate" data-categoria="Comida" data-precio="45000" data-stock="5"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+              <button class="btn btn-danger-ghost btn-sm" data-delete-product="Torta de chocolate"><svg class="icon"><use href="#ic-trash"/></svg></button>
             </div>
           </div>
         </div>
@@ -276,8 +276,8 @@
             <div class="prod-price">$6.000</div>
             <div class="prod-stock">Sin existencias</div>
             <div class="prod-actions">
-              <button class="btn btn-outline btn-sm" onclick="openProductModal('Galletas de avena','Comida',6000,0)"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
-              <button class="btn btn-danger-ghost btn-sm" onclick="confirmDelete('Galletas de avena')"><svg class="icon"><use href="#ic-trash"/></svg></button>
+              <button class="btn btn-outline btn-sm" data-edit-product data-name="Galletas de avena" data-categoria="Comida" data-precio="6000" data-stock="0"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+              <button class="btn btn-danger-ghost btn-sm" data-delete-product="Galletas de avena"><svg class="icon"><use href="#ic-trash"/></svg></button>
             </div>
           </div>
         </div>
@@ -297,28 +297,28 @@
               <td>Comida</td>
               <td><div class="qty-control"><button class="qty-btn"><svg class="icon"><use href="#ic-minus"/></svg></button><span class="qty-val">12</span><button class="qty-btn"><svg class="icon"><use href="#ic-plus"/></svg></button></div></td>
               <td><span class="pill pill-green">En stock</span></td>
-              <td><a href="#" style="font-size:12.5px;font-weight:600;color:var(--purple);">Editar producto</a></td>
+              <td><a href="#" class="cell-link" data-edit-product data-name="Cheesecake individual" data-categoria="Comida" data-precio="14000" data-stock="12">Editar producto</a></td>
             </tr>
             <tr>
               <td><div class="cell-prod"><div class="cell-thumb" style="background:linear-gradient(135deg,#DDD6FE,#A78BFA);"></div>Brownie con nutella</div></td>
               <td>Comida</td>
               <td><div class="qty-control"><button class="qty-btn"><svg class="icon"><use href="#ic-minus"/></svg></button><span class="qty-val">3</span><button class="qty-btn"><svg class="icon"><use href="#ic-plus"/></svg></button></div></td>
               <td><span class="pill pill-amber">Bajo</span></td>
-              <td><a href="#" style="font-size:12.5px;font-weight:600;color:var(--purple);">Editar producto</a></td>
+              <td><a href="#" class="cell-link" data-edit-product data-name="Brownie con nutella" data-categoria="Comida" data-precio="8500" data-stock="3">Editar producto</a></td>
             </tr>
             <tr>
               <td><div class="cell-prod"><div class="cell-thumb" style="background:linear-gradient(135deg,#B7E4C7,#74C69D);"></div>Torta de chocolate</div></td>
               <td>Comida</td>
               <td><div class="qty-control"><button class="qty-btn"><svg class="icon"><use href="#ic-minus"/></svg></button><span class="qty-val">5</span><button class="qty-btn"><svg class="icon"><use href="#ic-plus"/></svg></button></div></td>
               <td><span class="pill pill-green">En stock</span></td>
-              <td><a href="#" style="font-size:12.5px;font-weight:600;color:var(--purple);">Editar producto</a></td>
+              <td><a href="#" class="cell-link" data-edit-product data-name="Torta de chocolate" data-categoria="Comida" data-precio="45000" data-stock="5">Editar producto</a></td>
             </tr>
             <tr>
               <td><div class="cell-prod"><div class="cell-thumb" style="background:linear-gradient(135deg,#FDE68A,#FCA5A5);"></div>Galletas de avena</div></td>
               <td>Comida</td>
               <td><div class="qty-control"><button class="qty-btn"><svg class="icon"><use href="#ic-minus"/></svg></button><span class="qty-val">0</span><button class="qty-btn"><svg class="icon"><use href="#ic-plus"/></svg></button></div></td>
               <td><span class="pill pill-red">Agotado</span></td>
-              <td><a href="#" style="font-size:12.5px;font-weight:600;color:var(--purple);">Editar producto</a></td>
+              <td><a href="#" class="cell-link" data-edit-product data-name="Galletas de avena" data-categoria="Comida" data-precio="6000" data-stock="0">Editar producto</a></td>
             </tr>
           </tbody>
         </table>
@@ -341,11 +341,11 @@
           </thead>
           <tbody>
             <tr>
-              <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;">#1023</td>
+              <td class="cell-num">#1023</td>
               <td>Valentina G.</td>
               <td>2x Cheesecake individual</td>
-              <td style="font-weight:700;">$28.000</td>
-              <td style="color:var(--muted);">Hoy, 10:14 a.m.</td>
+              <td class="cell-strong">$28.000</td>
+              <td class="cell-muted">Hoy, 10:14 a.m.</td>
               <td>
                 <select class="status-select">
                   <option selected>Pendiente</option><option>Confirmado</option><option>Entregado</option><option>Cancelado</option>
@@ -353,11 +353,11 @@
               </td>
             </tr>
             <tr>
-              <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;">#1022</td>
+              <td class="cell-num">#1022</td>
               <td>Andrés R.</td>
               <td>1x Brownie, 1x Torta choc.</td>
-              <td style="font-weight:700;">$53.500</td>
-              <td style="color:var(--muted);">Hoy, 9:02 a.m.</td>
+              <td class="cell-strong">$53.500</td>
+              <td class="cell-muted">Hoy, 9:02 a.m.</td>
               <td>
                 <select class="status-select">
                   <option>Pendiente</option><option selected>Confirmado</option><option>Entregado</option><option>Cancelado</option>
@@ -365,11 +365,11 @@
               </td>
             </tr>
             <tr>
-              <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;">#1021</td>
+              <td class="cell-num">#1021</td>
               <td>Camila P.</td>
               <td>3x Galletas de avena</td>
-              <td style="font-weight:700;">$18.000</td>
-              <td style="color:var(--muted);">Ayer, 4:40 p.m.</td>
+              <td class="cell-strong">$18.000</td>
+              <td class="cell-muted">Ayer, 4:40 p.m.</td>
               <td>
                 <select class="status-select">
                   <option>Pendiente</option><option>Confirmado</option><option selected>Entregado</option><option>Cancelado</option>
@@ -377,11 +377,11 @@
               </td>
             </tr>
             <tr>
-              <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;">#1020</td>
+              <td class="cell-num">#1020</td>
               <td>Julián M.</td>
               <td>1x Cheesecake individual</td>
-              <td style="font-weight:700;">$14.000</td>
-              <td style="color:var(--muted);">Ayer, 1:15 p.m.</td>
+              <td class="cell-strong">$14.000</td>
+              <td class="cell-muted">Ayer, 1:15 p.m.</td>
               <td>
                 <select class="status-select">
                   <option selected>Pendiente</option><option>Confirmado</option><option>Entregado</option><option>Cancelado</option>
@@ -428,11 +428,11 @@
           </div>
         </div>
 
-        <div class="card panel" style="grid-column:1 / -1;">
+        <div class="card panel panel-full">
           <div class="panel-head"><h3>Resumen de pedidos</h3></div>
-          <div class="summary-row"><span>Pedidos completados</span><span style="color:var(--green);">32</span></div>
-          <div class="summary-row"><span>Pedidos pendientes</span><span style="color:var(--amber);">2</span></div>
-          <div class="summary-row"><span>Pedidos cancelados</span><span style="color:var(--red);">1</span></div>
+          <div class="summary-row"><span>Pedidos completados</span><span class="up">32</span></div>
+          <div class="summary-row"><span>Pedidos pendientes</span><span class="warn">2</span></div>
+          <div class="summary-row"><span>Pedidos cancelados</span><span class="danger">1</span></div>
           <div class="summary-row"><span>Total del mes</span><span>$486.000</span></div>
         </div>
       </div>
@@ -441,12 +441,21 @@
   </main>
 </div>
 
+<nav class="mobile-tabbar" id="mobileTabbarBiz">
+  <a href="#" class="active" data-view="dashboard"><svg class="icon"><use href="#ic-home"/></svg>Inicio</a>
+  <a href="#" data-view="emprendimiento"><svg class="icon"><use href="#ic-store"/></svg>Mi tienda</a>
+  <a href="#" data-view="productos"><svg class="icon"><use href="#ic-box"/></svg>Productos</a>
+  <a href="#" data-view="inventario"><svg class="icon"><use href="#ic-layers"/></svg>Inventario</a>
+  <a href="#" data-view="pedidos"><svg class="icon"><use href="#ic-receipt"/></svg>Pedidos</a>
+  <a href="#" data-view="estadisticas"><svg class="icon"><use href="#ic-chart"/></svg>Estadísticas</a>
+</nav>
+
 <!-- ============ MODAL: AGREGAR / EDITAR PRODUCTO ============ -->
 <div class="modal-overlay" id="product-modal">
   <div class="modal">
     <div class="modal-head">
       <h3 id="product-modal-title">Agregar producto</h3>
-      <button class="modal-close" onclick="closeProductModal()"><svg class="icon"><use href="#ic-x"/></svg></button>
+      <button class="modal-close" data-modal-close><svg class="icon"><use href="#ic-x"/></svg></button>
     </div>
     <div class="modal-body">
       <div class="field"><label>Nombre del producto</label><input type="text" id="pm-nombre" placeholder="Ej: Cheesecake individual"></div>
@@ -463,27 +472,34 @@
       <div class="field"><label>Imagen <span class="hint">(URL, opcional en este mock)</span></label><input type="text" id="pm-img" placeholder="https://..."></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeProductModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveProduct()">Guardar producto</button>
+      <button class="btn btn-outline" data-modal-close>Cancelar</button>
+      <button class="btn btn-primary" data-save-product>Guardar producto</button>
     </div>
   </div>
 </div>
 
 <!-- ============ MODAL: CONFIRMAR ELIMINAR ============ -->
 <div class="modal-overlay" id="delete-modal">
-  <div class="modal" style="max-width:380px;">
+  <div class="modal modal-sm">
     <div class="modal-head">
       <h3>Eliminar producto</h3>
-      <button class="modal-close" onclick="closeDeleteModal()"><svg class="icon"><use href="#ic-x"/></svg></button>
+      <button class="modal-close" data-modal-close><svg class="icon"><use href="#ic-x"/></svg></button>
     </div>
     <div class="modal-body">
-      <p style="margin:0;font-size:13.5px;color:var(--muted);">¿Seguro que quieres eliminar <strong id="delete-product-name" style="color:var(--ink);"></strong>? Esta acción no se puede deshacer.</p>
+      <p>¿Seguro que quieres eliminar <strong id="delete-product-name"></strong>? Esta acción no se puede deshacer.</p>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeDeleteModal()">Cancelar</button>
-      <button class="btn btn-primary" style="background:var(--red);" onclick="closeDeleteModal()">Sí, eliminar</button>
+      <button class="btn btn-outline" data-modal-close>Cancelar</button>
+      <button class="btn btn-danger" data-confirm-delete>Sí, eliminar</button>
     </div>
   </div>
+</div>
+
+<div id="btnMode">
+  <button id="modeToggle" class="theme-toggle" type="button" aria-label="Cambiar tema" aria-pressed="false">
+    <svg class="theme-toggle-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+    <svg class="theme-toggle-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>
+  </button>
 </div>
 
 <script type="module" src="/assets/js/business-js/business.js"></script>

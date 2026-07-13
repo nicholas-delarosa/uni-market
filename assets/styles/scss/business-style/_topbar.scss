@@ -1,0 +1,118 @@
+@use '../app-style/variables' as *;
+
+.main {
+    flex: 1;
+    min-width: 0;
+    padding: 26px 34px 60px;
+}
+
+.topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 26px;
+    gap: 20px;
+}
+
+.topbar h1 {
+    font-size: 26px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+}
+
+.topbar p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.bell-btn {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bell-btn .icon {
+    color: var(--color-text-muted);
+}
+
+.bell-dot {
+    position: absolute;
+    top: 7px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-red);
+    border: 1.5px solid var(--color-surface);
+}
+
+.user-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-violet), var(--color-orange));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.user-chip-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.user-chip-role {
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+}
+
+// El tabbar inferior (ver _sidebar.scss) reemplaza a la sidebar en
+// pantallas angostas, así que el contenido necesita espacio extra
+// abajo para no quedar tapado por él.
+@media (max-width: 980px) {
+    .main {
+        padding-bottom: 88px;
+    }
+}
+
+@media (max-width: 760px) {
+    .main {
+        padding: 20px 16px 88px;
+    }
+
+    .topbar {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 520px) {
+    .user-chip-name,
+    .user-chip-role {
+        display: none;
+    }
+}

@@ -1,8 +1,23 @@
 *,
 *::before,
-*::after
-{
-    box-sizing:border-box;
-    margin:0; 
-    padding:0;
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+// Sin esto, inputs, selects y botones no heredan la tipografía del
+// sitio y quedan con la fuente por defecto del navegador.
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
 }

@@ -1,0 +1,142 @@
+@use 'variables' as *;
+
+// Pantalla previa al catálogo: el usuario elige su universidad antes
+// de entrar. Usa los mismos tonos suaves de fondo que el panel de
+// marca del login (violeta + naranja), para que se sienta la misma familia visual.
+.uni-selector {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 64px 20px;
+    background:
+        radial-gradient(circle at 15% 10%, var(--color-violet-soft), transparent 45%),
+        radial-gradient(circle at 85% 15%, var(--color-orange-soft), transparent 40%),
+        var(--color-bg);
+}
+
+.uni-selector-head {
+    text-align: center;
+    max-width: 520px;
+    margin-bottom: 44px;
+}
+
+.uni-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 28px;
+}
+
+.uni-logo-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--color-violet), var(--color-orange));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.uni-selector-head h1 {
+    font-size: clamp(26px, 4vw, 36px);
+    margin-bottom: 12px;
+}
+
+.uni-selector-head p {
+    color: var(--color-text-muted);
+    font-size: 15.5px;
+}
+
+.uni-search {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: 100px;
+    padding: 12px 18px;
+    margin-bottom: 36px;
+}
+
+.uni-search input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 14.5px;
+    background: transparent;
+}
+
+.uni-search svg {
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-faint);
+    flex-shrink: 0;
+}
+
+.uni-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    max-width: 840px;
+    width: 100%;
+}
+
+.uni-card {
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: $radius-md;
+    padding: 20px 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.uni-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+    border-color: transparent;
+}
+
+.uni-card img {
+    width: 100%;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.uni-card span {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.uni-empty-note {
+    margin-top: 28px;
+    font-size: 13px;
+    color: var(--color-text-faint);
+    text-align: center;
+}
+
+@media (max-width: 720px) {
+    .uni-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 420px) {
+    .uni-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+}

@@ -1,4 +1,4 @@
- /* ================= DATA ================= */
+/* ================= DATA ================= */
   const universities = [
     { id:'unorte', name:'Universidad del Norte', logo:'/assets/src/images/UniNorte.png' },
     { id:'cuc', name:'Costa Universidad', logo:'/assets/src/images/Logo_cuc.png' },
@@ -63,8 +63,8 @@
   function renderUniGrid(filter = '') {
     const list = universities.filter(u => u.name.toLowerCase().includes(filter.toLowerCase()));
     uniGrid.innerHTML = list.map(u => `
-      <button class="uni-card" data-uni="${u.id}" style="font:inherit;">
-        <img src="${u.logo}" alt="${u.name}">
+      <button class="uni-card" data-uni="${u.id}">
+        <img src="${u.logo}" alt="${u.name}" loading="lazy">
         <span>${u.name}</span>
       </button>
     `).join('');
@@ -84,6 +84,7 @@
     uniSelectorScreen.style.display = 'none';
     appShell.style.display = 'flex';
     document.getElementById('sidebarUniImg').src = uni.logo;
+    document.getElementById('sidebarUniImg').alt = uni.name;
     document.getElementById('sidebarUniName').textContent = uni.name;
     setView('catalog');
   }
@@ -104,7 +105,6 @@
 
   function setView(view) {
     state.view = view;
-    if (view !== 'catalog') state.sellerFilter = state.sellerFilter;
     document.querySelectorAll('.side-link, .mobile-tabbar a').forEach(el => {
       el.classList.toggle('active', el.dataset.view === view);
     });
@@ -322,7 +322,7 @@
             <h3 class="profile-name">Valentina G.</h3>
             <div class="profile-sub">valentina.g@correo.edu.co · Estudiante</div>
             <span class="profile-uni-tag">
-              <img src="${state.university.logo}" alt="" style="width:16px;height:16px;border-radius:4px;object-fit:cover;">
+              <img src="${state.university.logo}" alt="" loading="lazy">
               ${state.university.name}
             </span>
           </div>
@@ -346,7 +346,7 @@
                 </div>
               `).join('')}
             </div>
-          ` : `<p style="font-size:13.5px; color:var(--slate-light);">Aún no has guardado productos. Toca el corazón en el catálogo para guardarlos aquí.</p>`}
+          ` : `<p class="profile-fav-empty">Aún no has guardado productos. Toca el corazón en el catálogo para guardarlos aquí.</p>`}
         </div>
 
         <div class="profile-section">
@@ -370,23 +370,21 @@
 
 
   /* ================ DARK MODE ============== */
-    const body = document.body;
-    const modeToggle = document.getElementById("modeToggle");
+  const body = document.body;
+  const modeToggle = document.getElementById('modeToggle');
 
-    const savedMode = localStorage.getItem("mode");
+  function syncModeToggleState() {
+    modeToggle.setAttribute('aria-pressed', body.classList.contains('dark-mode'));
+  }
 
-    if (savedMode === "dark") {
-        body.classList.add("dark-mode");
-    }
+  const savedMode = localStorage.getItem('mode');
+  if (savedMode === 'dark') {
+    body.classList.add('dark-mode');
+  }
+  syncModeToggleState();
 
-   modeToggle.addEventListener("click", () => {
-    console.log("Botón presionado");
-
-    body.classList.toggle("dark-mode");
-
-    if (body.classList.contains("dark-mode")) {
-        localStorage.setItem("mode", "dark");
-    } else {
-        localStorage.setItem("mode", "light");
-    }
-});
+  modeToggle.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+    localStorage.setItem('mode', body.classList.contains('dark-mode') ? 'dark' : 'light');
+    syncModeToggleState();
+  });

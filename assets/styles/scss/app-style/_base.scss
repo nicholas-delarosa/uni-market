@@ -1,0 +1,63 @@
+// Reglas base que se repetían casi textuales en style-app.scss y
+// style-business.scss (tipografía, links, listas, imágenes). Quedan
+// acá una sola vez para que las dos páginas se vean consistentes.
+@use 'variables' as *;
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--color-text);
+    background: var(--color-bg-alt);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+// Ícono genérico de línea que usan tanto los SVG del catálogo como
+// los <use> del panel del emprendedor.
+.icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
