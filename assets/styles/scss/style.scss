@@ -19,7 +19,7 @@
 
 body{
     width: 100%;
-    height: 100vh;
+    height: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -29,42 +29,42 @@ body{
     height: 30px;
 }
 .container{
-    border: 2px solid var(--secondary-color);
-    width: 800px;
-    height: 500px;
+    border: 0.125rem solid var(--secondary-color);
+    max-width: 100%;
+    height: auto;
     display: flex;
     flex-direction: row;
 };
 .container-form{
-    border: 2px solid var(--tertiary-color);
-    width: 100%;
+    border: 0.125rem solid var(--tertiary-color);
+    max-width: 100%;
     overflow: hidden;
 }
 .container-form form{
-    border: 2px solid var(--primary-color);
-    height: 100%;
+    border: 0.125rem solid var(--primary-color);
+    height: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 .container-form h2{
-    font-size: 30px;
-    margin-bottom: 20px;
+    font-size: 1.875rem;
+    margin-bottom: 1.25rem;
 }
 .container-form span{
-    font-size: 12px;
-    margin-bottom: 15px;
+    font-size: 0.75rem;
+    margin-bottom: 0.938rem;
 }
 .container-input{
-    width: 300px;
-    height: 40px;
-    margin-bottom: 10px;
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 0.625rem;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    padding: 0 15px;
+    gap: 0.5rem;
+    padding: 0 0.938rem;
     background-color: var(--white-castle);
 }
 .container-input input{
@@ -77,9 +77,9 @@ body{
 
 .container-form a{
     color: var(--secondary-color);
-    font-size: 14px;
-    margin-bottom: 20px;
-    margin-top: 5px;
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+    margin-top: 0.313rem;
 }
 
  @mixin bg-color($color:#8A2BE2){
@@ -89,13 +89,13 @@ body{
         color: $color;
  }
 .button{
-    width: 170px;
-    height: 45px;
-    font-size: 15px;
+    max-width: 100%;
+    height: auto;
+    font-size: 0.938rem;
     border: none;
-    border-radius: 5px;
+    border-radius: 0.313rem;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 0.625rem;
     @include bg-color();
     @include text-color();
 }
@@ -108,7 +108,7 @@ footer{
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: auto;
     background-color: var(--white-castle);
     @include dark-color();
     margin: 2rem;
@@ -118,11 +118,11 @@ body.dark-mode{
     color: var(--white-castle);
 }
 #modeToggle{
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 0.625rem 1.25rem;
+    font-size: 1rem;
     cursor: pointer;
     border: none;
-    border-radius: 5px;
+    border-radius: 0.313rem;
     transition: background-color 0.3s;
     background-color: #333333;
     color: var(--white-castle);
