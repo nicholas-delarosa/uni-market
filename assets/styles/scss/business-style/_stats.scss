@@ -1,0 +1,131 @@
+@use '../app-style/variables' as *;
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 16px;
+}
+
+.panel-full {
+    grid-column: 1 / -1;
+}
+
+.bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    height: 160px;
+    padding: 20px 6px 0;
+}
+
+.bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.bar {
+    width: 100%;
+    max-width: 34px;
+    border-radius: 7px 7px 3px 3px;
+    background: linear-gradient(180deg, var(--color-violet), var(--color-orange));
+}
+
+.bar-day {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.rank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.rank-row:first-child {
+    border-top: none;
+}
+
+.rank-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    width: 16px;
+}
+
+.rank-info {
+    flex: 1;
+}
+
+.rank-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.rank-bar-track {
+    height: 6px;
+    background: var(--color-bg-alt);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.rank-bar-fill {
+    height: 100%;
+    background: var(--color-violet);
+}
+
+.rank-count {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    width: 44px;
+    text-align: right;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.summary-row:first-child {
+    border-top: none;
+}
+
+.summary-row span:first-child {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.summary-row span:last-child {
+    font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.summary-row .up {
+    color: var(--color-green);
+}
+
+.summary-row .warn {
+    color: var(--color-amber);
+}
+
+.summary-row .danger {
+    color: var(--color-red);
+}
+
+@media (max-width: 980px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

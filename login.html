@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión — Unimarket</title>
+    <meta name="description" content="Ingresa o crea tu cuenta de Unimarket, el marketplace de tu universidad.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/css/style-login.css">
+</head>
+
+<body>
+    <div class="auth-page">
+        <a href="index.html" class="back-home-link">← Volver al inicio</a>
+
+        <div class="auth-shell">
+            <div class="auth-visual">
+                <div class="auth-visual-content">
+                    <span class="logo"><span class="logo-mark">U</span>Unimarket</span>
+                    <h2>Tu campus tiene mucho más para ofrecer</h2>
+                    <p>Entra a la comunidad donde estudiantes compran, venden y hacen crecer sus propios negocios.</p>
+                    <div class="auth-stats">
+                        <div class="auth-stat">
+                            <b>+40</b>
+                            <span>universidades activas</span>
+                        </div>
+                        <div class="auth-stat">
+                            <b>+12K</b>
+                            <span>estudiantes conectados</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-forms">
+                <!--
+                    Los dos formularios ocupan el mismo espacio.
+                    Para mostrar uno u otro basta con mover la clase
+                    "active" entre estos dos .container-form; el que
+                    no la tenga queda oculto (display: none).
+                -->
+                <form class="container-form sign-in active" novalidate>
+                    <div class="form-head">
+                        <h2>Iniciar sesión</h2>
+                        <span>Usa tu correo y contraseña institucional</span>
+                    </div>
+
+                    <label class="container-input" for="signin-email">
+                        <img class="svg" src="/assets/src/svg/mail.svg" alt="">
+                        <input type="email" name="email" id="signin-email" placeholder="jesus.noguera@riwi.io" required>
+                    </label>
+
+                    <label class="container-input" for="signin-password">
+                        <img class="svg" src="/assets/src/svg/lock-closed.svg" alt="">
+                        <input type="password" name="password" id="signin-password" placeholder="********" required>
+                    </label>
+
+                    <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+
+                    <button type="submit" class="button">Ingresar</button>
+
+                    <p class="form-switch">
+                        ¿Aún no tienes cuenta?
+                        <button type="button" id="registerAs">Crear cuenta</button>
+                    </p>
+                </form>
+
+                <form class="container-form sign-up" novalidate>
+                    <div class="form-head">
+                        <h2>Crear cuenta</h2>
+                        <span>Regístrate con tu correo institucional</span>
+                    </div>
+
+                    <label class="container-input" for="signup-name">
+                        <img class="svg" src="/assets/src/svg/person.svg" alt="">
+                        <input type="text" name="name" id="signup-name" placeholder="Nombre completo" required>
+                    </label>
+
+                    <label class="container-input" for="signup-email">
+                        <img class="svg" src="/assets/src/svg/mail.svg" alt="">
+                        <input type="email" name="email" id="signup-email" placeholder="jesus.noguera@riwi.io" required>
+                    </label>
+
+                    <label class="container-input" for="signup-password">
+                        <img class="svg" src="/assets/src/svg/lock-closed.svg" alt="">
+                        <input type="password" name="password" id="signup-password" placeholder="********" required>
+                    </label>
+
+                    <button type="submit" class="button">Crear cuenta</button>
+
+                    <p class="form-switch">
+                        ¿Ya tienes cuenta?
+                        <button type="button" id="loginAs">Iniciar sesión</button>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <div id="btnMode" class="light-mode">
+            <button id="modeToggle" class="theme-toggle" type="button" aria-label="Cambiar tema">
+                <svg class="theme-toggle-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+                <svg class="theme-toggle-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>
+            </button>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/login-js/script.js"></script>
+</body>
+
+</html>

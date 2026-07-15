@@ -1,0 +1,134 @@
+@use "reset";
+@use "variables";
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+.header{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+    z-index: 10;
+    position: relative;
+}
+.tabs{
+    display: flex;
+    margin-top: 2rem;
+}
+
+
+body{
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+};
+.svg{
+    height: 30px;
+}
+.container{
+    border: 0.125rem solid var(--secondary-color);
+    max-width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+};
+.container-form{
+    border: 0.125rem solid var(--tertiary-color);
+    max-width: 100%;
+    overflow: hidden;
+}
+.container-form form{
+    border: 0.125rem solid var(--primary-color);
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.container-form h2{
+    font-size: 1.875rem;
+    margin-bottom: 1.25rem;
+}
+.container-form span{
+    font-size: 0.75rem;
+    margin-bottom: 0.938rem;
+}
+.container-input{
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 0.625rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.938rem;
+    background-color: var(--white-castle);
+}
+.container-input input{
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+}
+
+.container-form a{
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+    margin-top: 0.313rem;
+}
+
+ @mixin bg-color($color:#8A2BE2){
+        background-color: $color;
+    }
+ @mixin text-color($color:white){
+        color: $color;
+ }
+.button{
+    max-width: 100%;
+    height: auto;
+    font-size: 0.938rem;
+    border: none;
+    border-radius: 0.313rem;
+    cursor: pointer;
+    margin-top: 0.625rem;
+    @include bg-color();
+    @include text-color();
+}
+
+@mixin dark-color($color: #333333){
+    color:$color
+}
+footer{
+    font-family: "Montserrat";
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    background-color: var(--white-castle);
+    @include dark-color();
+    margin: 2rem;
+}
+body.dark-mode{
+    background-color: #333333;
+    color: var(--white-castle);
+}
+#modeToggle{
+    padding: 0.625rem 1.25rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 0.313rem;
+    transition: background-color 0.3s;
+    background-color: #333333;
+    color: var(--white-castle);
+}
+.dark-mode #modeToggle{
+    background-color: #333333;
+    color: var(--white-castle);
+}
+

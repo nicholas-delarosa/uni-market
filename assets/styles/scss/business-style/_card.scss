@@ -1,0 +1,18 @@
+@use '../app-style/variables' as *;
+
+// Contenedor genérico que usan casi todas las vistas del panel
+// (tarjetas de stat, paneles, tablas, modal, productos...).
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: $radius-md;
+    box-shadow: var(--shadow-soft);
+}
+
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block;
+}

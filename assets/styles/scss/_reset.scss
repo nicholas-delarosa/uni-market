@@ -1,0 +1,27 @@
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+// Estas reglas son nuevas: sin ellas los inputs y botones no heredan
+// la tipografia de la pagina y quedan con la fuente por defecto del
+// navegador, que se nota feo al lado del resto del sitio.
+button,
+input {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}

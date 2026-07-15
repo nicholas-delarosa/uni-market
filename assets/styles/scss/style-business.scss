@@ -1,0 +1,18 @@
+// El panel del emprendedor comparte reset, variables, tipografía base,
+// botones y el botón de tema con el catálogo (style-app.scss), para
+// que las dos vistas de la app se sientan parte del mismo sitio.
+@use 'app-style/reset';
+@use 'app-style/variables';
+@use 'app-style/base';
+@use 'app-style/buttons';
+@use 'app-style/theme-toggle';
+
+@use 'business-style/card';
+@use 'business-style/sidebar';
+@use 'business-style/topbar';
+@use 'business-style/dashboard';
+@use 'business-style/products';
+@use 'business-style/tables';
+@use 'business-style/store-settings';
+@use 'business-style/stats';
+@use 'business-style/modal';
