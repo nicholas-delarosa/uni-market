@@ -1,0 +1,100 @@
+@use '../app-style/variables' as *;
+
+.section-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 9px 14px;
+    width: 280px;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    font-size: 13.5px;
+    width: 100%;
+    background: transparent;
+}
+
+.search-box .icon {
+    color: var(--color-text-muted);
+    width: 16px;
+    height: 16px;
+}
+
+.prod-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.prod-card {
+    overflow: hidden;
+}
+
+.prod-media {
+    height: 120px;
+    position: relative;
+}
+
+.prod-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--color-surface);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+
+.prod-stockflag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.prod-body {
+    padding: 13px 14px 15px;
+}
+
+.prod-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 3px;
+}
+
+.prod-price {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.prod-stock {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 12px;
+}
+
+.prod-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.prod-actions .btn {
+    flex: 1;
+    justify-content: center;
+}

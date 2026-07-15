@@ -1,0 +1,87 @@
+// Antes había DOS sets de variables distintos flotando en el proyecto:
+// uno con --violet/--orange/--mint/--white/--paper (el que ya usaba
+// style-app.scss) y otro con --purple/--pink/--bg/--bg-soft (el que
+// terminó quedando en este archivo, pensado para style-business.scss).
+// Ninguno de los dos coincidía del todo, así que varias reglas
+// apuntaban a variables que no existían. Acá queda un solo set,
+// compartido por landing, login, catálogo y panel del emprendedor.
+
+$radius-lg: 24px;
+$radius-md: 16px;
+$radius-sm: 10px;
+$sidebar-w: 252px;
+
+:root {
+    --color-bg: #ffffff;
+    --color-bg-alt: #f7f7fb;
+    --color-surface: #ffffff;
+
+    --color-text: #13141a;
+    --color-text-muted: #5b5f6b;
+    --color-text-faint: #8a8d97;
+    --color-border: #e9e9f0;
+
+    --color-btn-primary-bg: #13141a;
+    --color-btn-primary-text: #ffffff;
+
+    --color-violet: #5b4fe8;
+    --color-violet-soft: #efedfd;
+    --color-orange: #ff7a45;
+    --color-orange-soft: #fff0e8;
+    --color-mint: #0fae87;
+    --color-mint-soft: #e6f8f3;
+
+    // Estos tres son nuevos: los necesita el panel del emprendedor
+    // para pedidos pendientes/confirmados y alertas de stock.
+    --color-green: #15803d;
+    --color-green-soft: #ecfdf3;
+    --color-amber: #b45309;
+    --color-amber-soft: #fffbeb;
+    --color-red: #dc2626;
+    --color-red-soft: #fef2f2;
+
+    --shadow-card: 0 20px 40px -18px rgba(19, 20, 26, 0.18);
+    --shadow-soft: 0 10px 30px -12px rgba(19, 20, 26, 0.12);
+}
+
+@mixin dark-palette {
+    --color-bg: #0e0f14;
+    --color-bg-alt: #15171f;
+    --color-surface: #1b1e28;
+
+    --color-text: #f2f2f7;
+    --color-text-muted: #a7abba;
+    --color-text-faint: #7d818f;
+    --color-border: #2a2d3a;
+
+    --color-btn-primary-bg: #f2f2f7;
+    --color-btn-primary-text: #0e0f14;
+
+    --color-violet: #8078ff;
+    --color-violet-soft: rgba(128, 120, 255, 0.16);
+    --color-orange: #ff9166;
+    --color-orange-soft: rgba(255, 145, 102, 0.14);
+    --color-mint: #27d1a6;
+    --color-mint-soft: rgba(39, 209, 166, 0.14);
+
+    --color-green: #34d399;
+    --color-green-soft: rgba(52, 211, 153, 0.14);
+    --color-amber: #fbbf24;
+    --color-amber-soft: rgba(251, 191, 36, 0.14);
+    --color-red: #f87171;
+    --color-red-soft: rgba(248, 113, 113, 0.14);
+
+    --shadow-card: 0 20px 40px -18px rgba(0, 0, 0, 0.55);
+    --shadow-soft: 0 10px 30px -12px rgba(0, 0, 0, 0.45);
+}
+
+// Igual que en el login: cubrimos las dos formas de activar el modo
+// oscuro (atributo en <html> o clase en <body>) desde un solo mixin,
+// para no repetir la paleta oscura dos veces.
+[data-theme='dark'] {
+    @include dark-palette;
+}
+
+body.dark-mode {
+    @include dark-palette;
+}
