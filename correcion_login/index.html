@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión — UNI-Market</title>
+    <meta name="description" content="Ingresa o crea tu cuenta de UNI-Market, el marketplace de tu universidad.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="auth-page">
+        <a href="#" class="back-home-link">← Volver al inicio</a>
+
+        <div class="auth-shell">
+
+            <!-- ========================= -->
+            <!-- PANEL VISUAL -->
+            <!-- ========================= -->
+            <div class="auth-visual">
+
+                <!-- Tarjetas flotantes: lo que ya se está vendiendo en el campus -->
+                <div class="listing-stack" aria-hidden="true">
+                    <div class="listing-card card-1">
+                        <span class="listing-icon"><i class="fa-solid fa-headphones-simple"></i></span>
+                        <div class="listing-info">
+                            <strong>Audífonos Sony</strong>
+                            <span>$85.000</span>
+                        </div>
+                    </div>
+                    <div class="listing-card card-2">
+                        <span class="listing-icon"><i class="fa-solid fa-book"></i></span>
+                        <div class="listing-info">
+                            <strong>Cálculo de Stewart</strong>
+                            <span>$40.000</span>
+                        </div>
+                    </div>
+                    <div class="listing-card card-3">
+                        <span class="listing-icon"><i class="fa-solid fa-flask"></i></span>
+                        <div class="listing-info">
+                            <strong>Tutorías de Química</strong>
+                            <span>$25.000/h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-visual-content">
+                    <span class="logo"><span class="logo-mark"><i class="fa-solid fa-scissors"></i></span>UNI-Market</span>
+                    <h2>Tu campus tiene mucho más para ofrecer</h2>
+                    <p>Entra a la comunidad donde estudiantes compran, venden y hacen crecer sus propios negocios.</p>
+                    <div class="auth-stats">
+                        <div class="auth-stat">
+                            <b>+40</b>
+                            <span>universidades activas</span>
+                        </div>
+                        <div class="auth-stat">
+                            <b>+12K</b>
+                            <span>estudiantes conectados</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================= -->
+            <!-- PANEL FORMULARIOS -->
+            <!-- ========================= -->
+            <div class="auth-forms">
+
+                <!-- Marca compacta, solo visible en móvil -->
+                <div class="auth-mobile-brand">
+                    <span class="logo-mark"><i class="fa-solid fa-scissors"></i></span>
+                    <span>UNI-Market</span>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs" id="tabsSwitch">
+                    <button type="button" id="loginTab" class="active">Iniciar sesión</button>
+                    <button type="button" id="registerTab">Crear cuenta</button>
+                </div>
+
+                <!-- ========================= -->
+                <!-- LOGIN -->
+                <!-- ========================= -->
+                <form id="loginSection" class="container-form sign-in active" novalidate>
+                    <div class="form-head">
+                        <h2>Bienvenido de nuevo</h2>
+                        <span>Ingresa tus datos para continuar.</span>
+                    </div>
+
+                    <label class="container-input" for="signin-email">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" name="email" id="signin-email" placeholder="manuel@riwi.io" required>
+                    </label>
+
+                    <label class="container-input password" for="signin-password">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" name="password" id="signin-password" placeholder="********" required>
+                        <i class="fa-regular fa-eye toggle-password"></i>
+                    </label>
+
+                    <div class="options">
+                        <label class="remember">
+                            <input type="checkbox">
+                            Recordarme
+                        </label>
+                        <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <button type="submit" class="button">Iniciar sesión</button>
+
+                    <p class="form-switch">
+                        ¿Aún no tienes cuenta?
+                        <button type="button" id="goRegister">Regístrate aquí</button>
+                    </p>
+                </form>
+
+                <!-- ========================= -->
+                <!-- REGISTRO -->
+                <!-- ========================= -->
+                <form id="registerSection" class="container-form sign-up hidden" novalidate>
+                    <div class="form-head">
+                        <h2>Crear cuenta</h2>
+                        <span>Completa los datos para comenzar.</span>
+                    </div>
+
+                    <label class="container-input" for="signup-name">
+                        <i class="fa-regular fa-user"></i>
+                        <input type="text" name="name" id="signup-name" placeholder="Juan Pérez" required>
+                    </label>
+
+                    <label class="container-input" for="signup-email">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" name="email" id="signup-email" placeholder="correo@universidad.edu" required>
+                    </label>
+
+                    <label class="container-input select-input" for="signup-university">
+                        <i class="fa-solid fa-building-columns"></i>
+                        <select name="university" id="signup-university" required>
+                            <option value="" selected disabled>Selecciona tu universidad</option>
+                            <option>Universidad de la Costa</option>
+                            <option>Universidad del Norte</option>
+                            <option>Universidad Simón Bolívar</option>
+                        </select>
+                    </label>
+
+                    <label class="container-input password" for="signup-password">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" name="password" id="signup-password" placeholder="********" required>
+                        <i class="fa-regular fa-eye toggle-password"></i>
+                    </label>
+
+                    <label class="container-input password" for="signup-password-confirm">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" name="passwordConfirm" id="signup-password-confirm" placeholder="********" required>
+                        <i class="fa-regular fa-eye toggle-password"></i>
+                    </label>
+
+                    <!--
+                        Con esto definimos a dónde redirige el registro:
+                        "comprador" -> app.html (catálogo)
+                        "emprendedor" -> panel-emprendedor.html
+                        La lógica está en script.js
+                    -->
+                    <div class="container-input role-select" role="radiogroup" aria-label="Tipo de cuenta">
+                        <label class="role-option">
+                            <input type="radio" name="role" value="comprador" checked>
+                            Quiero comprar
+                        </label>
+                        <label class="role-option">
+                            <input type="radio" name="role" value="emprendedor">
+                            Quiero emprender
+                        </label>
+                    </div>
+
+                    <button type="submit" class="button">Crear cuenta</button>
+
+                    <p class="form-switch">
+                        ¿Ya tienes una cuenta?
+                        <button type="button" id="goLogin">Inicia sesión</button>
+                    </p>
+                </form>
+
+                <footer class="auth-footer">© 2026 UNI-Market — El mercado de tu campus.</footer>
+            </div>
+        </div>
+
+        <div id="btnMode" class="light-mode">
+            <button id="modeToggle" class="theme-toggle" type="button" aria-label="Cambiar tema">
+                <svg class="theme-toggle-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+                <svg class="theme-toggle-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
