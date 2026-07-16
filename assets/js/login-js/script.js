@@ -21,8 +21,26 @@ modeToggle.addEventListener("click", () => {
 const API_URL = 'http://localhost:3000/api';
 
 const signInForm = document.querySelector('.container-form.sign-in');
+const signUpForm = document.querySelector('.container-form.sign-up');
 const signInEmail = document.getElementById('signin-email');
 const signInPassword = document.getElementById('signin-password');
+const btnSwitchRegister = document.getElementById("registerAs");
+const btnSwitchLogin = document.getElementById("loginAs");
+
+// Acción para cambiar del login al crear cuenta
+// si el usuario da click en "Crear Cuenta"
+btnSwitchRegister.addEventListener("click", () => {
+  signInForm.classList.remove("active");
+  signUpForm.classList.add("active");
+});
+
+// Acción para cambiar de crear cuenta al login
+// si el usuario da click en "Iniciar Sesión"
+btnSwitchLogin.addEventListener("click", () => {
+  signUpForm.classList.remove("active");
+  signInForm.classList.add("active");
+});
+
 
 // mensaje de error simple, se inserta debajo de la contraseña la primera vez que hace falta
 let errorMsg = document.querySelector('.signin-error');
