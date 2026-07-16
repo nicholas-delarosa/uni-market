@@ -1,18 +1,111 @@
-/* =========================================================================
-   PANEL DEL EMPRENDEDOR — lógica de interfaz
-   -------------------------------------------------------------------------
-   Este archivo funciona de forma independiente con datos de ejemplo.
-   Los puntos marcados con "// [DB]" son donde el equipo de base de datos
-   debe reemplazar la lógica simulada por llamadas reales al backend
-   (fetch a /api/...), sin tener que tocar el resto del código.
+const API_URL = 'http://localhost:3000/api';
 
-   Nota sobre el cambio hecho acá: el HTML ya no usa onclick="..." en los
-   botones. Este archivo se carga como <script type="module">, y los
-   módulos no exponen sus funciones a window, así que cualquier onclick
-   que llamara a una función declarada aquí (switchView, openProductModal,
-   etc.) fallaba en silencio con un "is not defined". Ahora todo se
-   conecta por atributos data-* y delegación de eventos.
-   ========================================================================= */
+// esta vista es solo para emprendedores logueados: si no hay usuario
+// guardado por el login, no tiene sentido mostrarla
+const usuarioGuardado = JSON.parse(localStorage.getItem('um_usuario') || 'null');
+if (!usuarioGuardado) {
+  window.location.href = 'login.html';
+}
+
+let miEmprendimiento = null;
+let misProductos = [];
+
+async function apiGet(path) {
+  const res = await fetch(`${API_URL}${path}`);
+  if (!res.ok) throw new Error(`Error al llamar ${path}`);
+  return res.json();
+}
+
+async function apiSend(method, path, body) {
+  const res = await fetch(`${API_URL}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Error al llamar ${path}`);
+  return data;
+}
+
+async function recargarProductos() {
+  if (!miEmprendimiento) return;
+  misProductos = await apiGet(`/productos?emprendimiento_id=${miEmprendimiento.id}`);
+  renderProductos();
+}
+
+function formatPrecio(n) {
+  return '$' + Number(n).toLocaleString('es-CO');
+}
+
+function stockInfo(stock, stockMinimo) {
+  if (stock === 0) return { label: 'Agotado', pill: 'pill-red', texto: 'Sin existencias' };
+  if (stock <= stockMinimo) return { label: 'Bajo', pill: 'pill-amber', texto: `${stock} unidades disponibles` };
+  return { label: 'En stock', pill: 'pill-green', texto: `${stock} unidades disponibles` };
+}
+
+function renderProductos() {
+  const grid = document.querySelector('#view-productos .prod-grid');
+  if (!grid) return;
+
+  if (!misProductos.length) {
+    grid.innerHTML = `<p class="empty-hint">Todavía no has agregado productos. Usa "Agregar producto" para crear el primero.</p>`;
+    return;
+  }
+
+  grid.innerHTML = misProductos.map(p => {
+    const info = stockInfo(p.stock, p.stockMinimo);
+    const agotado = info.label === 'Agotado';
+    return `
+      <div class="card prod-card">
+        <div class="prod-media" style="background-image:url('${p.image}'); background-size:cover; background-position:center;${agotado ? ' opacity:.55;' : ''}">
+          <span class="prod-badge">${p.category || ''}</span>
+          <span class="prod-stockflag pill ${info.pill}">${info.label}</span>
+        </div>
+        <div class="prod-body">
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-price">${formatPrecio(p.price)}</div>
+          <div class="prod-stock">${info.texto}</div>
+          <div class="prod-actions">
+            <button class="btn btn-outline btn-sm" data-edit-product data-id="${p.id}" data-name="${p.name}" data-categoria="${p.category || ''}" data-precio="${p.price}" data-stock="${p.stock}"><svg class="icon"><use href="#ic-pencil"/></svg>Editar</button>
+            <button class="btn btn-danger-ghost btn-sm" data-delete-product="${p.name}" data-id="${p.id}"><svg class="icon"><use href="#ic-trash"/></svg></button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function cargarMiTienda() {
+  try {
+    // 1. encontrar el emprendimiento del usuario logueado
+    const emprendimientos = await apiGet(`/emprendimientos?usuario_id=${usuarioGuardado.id}`);
+    miEmprendimiento = emprendimientos[0];
+
+    if (!miEmprendimiento) {
+      console.warn('Este usuario todavía no tiene un emprendimiento creado.');
+      return;
+    }
+
+    // 2. reflejar el nombre real en el sidebar y el saludo del dashboard
+    const storeNameEl = document.querySelector('.store-name');
+    if (storeNameEl) storeNameEl.textContent = miEmprendimiento.name;
+
+    pageMeta.dashboard.title = `Hola, ${usuarioGuardado.nombre} 👋`;
+    pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
+    document.getElementById('page-title').textContent = pageMeta.dashboard.title;
+    document.getElementById('page-subtitle').textContent = pageMeta.dashboard.subtitle;
+
+    // 3. traer y pintar los productos reales
+    misProductos = await apiGet(`/productos?emprendimiento_id=${miEmprendimiento.id}`);
+    renderProductos();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+if (usuarioGuardado) {
+  cargarMiTienda();
+}
 
 /* ---------- navegación entre secciones ---------- */
 const pageMeta = {
@@ -83,9 +176,12 @@ document.getElementById('status-switch-2').addEventListener('click', toggleTiend
 pintarEstadoTienda();
 
 /* ---------- modal: agregar / editar producto ---------- */
-// [DB] al guardar: POST /api/productos (nuevo) o PUT /api/productos/:id (edición)
-function openProductModal(nombre, categoria, precio, stock) {
-  const editing = nombre !== undefined;
+let productoEnEdicionId = null;
+
+function openProductModal(id, nombre, categoria, precio, stock) {
+  const editing = id !== undefined;
+  productoEnEdicionId = editing ? id : null;
+
   document.getElementById('product-modal-title').textContent = editing ? 'Editar producto' : 'Agregar producto';
   document.getElementById('pm-nombre').value = editing ? nombre : '';
   document.getElementById('pm-categoria').value = editing ? categoria : 'Comida';
@@ -96,32 +192,66 @@ function openProductModal(nombre, categoria, precio, stock) {
   document.getElementById('product-modal').classList.add('show');
 }
 
-function saveProduct() {
+async function saveProduct() {
   const nombre = document.getElementById('pm-nombre').value.trim();
   if (!nombre) {
     alert('El producto necesita un nombre.');
     return;
   }
-  // [DB]: reemplazar este bloque por el guardado real en la base de datos.
-  // Por ahora solo cerramos el modal para simular que se guardó.
-  document.getElementById('product-modal').classList.remove('show');
+
+  const payload = {
+    nombre,
+    categoria: document.getElementById('pm-categoria').value,
+    precio: Number(document.getElementById('pm-precio').value) || 0,
+    stock: Number(document.getElementById('pm-stock').value) || 0,
+    descripcion: document.getElementById('pm-desc').value.trim(),
+    imagenUrl: document.getElementById('pm-img').value.trim() || null,
+  };
+
+  const saveBtn = document.querySelector('[data-save-product]');
+  const originalText = saveBtn.textContent;
+  saveBtn.textContent = 'Guardando...';
+  saveBtn.disabled = true;
+
+  try {
+    if (productoEnEdicionId) {
+      await apiSend('PUT', `/productos/${productoEnEdicionId}`, payload);
+    } else {
+      await apiSend('POST', '/productos', { ...payload, emprendimientoId: miEmprendimiento.id });
+    }
+    document.getElementById('product-modal').classList.remove('show');
+    await recargarProductos();
+  } catch (err) {
+    console.error(err);
+    alert(err.message || 'No se pudo guardar el producto');
+  } finally {
+    saveBtn.textContent = originalText;
+    saveBtn.disabled = false;
+  }
 }
 
 /* ---------- modal: confirmar eliminación ---------- */
-// [DB] al confirmar: DELETE /api/productos/:id
 let productoAEliminar = null;
 
-function confirmDelete(nombre) {
-  productoAEliminar = nombre;
+function confirmDelete(id, nombre) {
+  productoAEliminar = id;
   document.getElementById('delete-product-name').textContent = nombre;
   document.getElementById('delete-modal').classList.add('show');
 }
 
-function deleteProductConfirmed() {
-  // [DB]: reemplazar por fetch(`/api/productos/${id}`, { method:'DELETE' })
-  // y quitar la tarjeta/fila correspondiente del DOM cuando el backend confirme.
-  document.getElementById('delete-modal').classList.remove('show');
-  productoAEliminar = null;
+async function deleteProductConfirmed() {
+  if (!productoAEliminar) return;
+
+  try {
+    await apiSend('DELETE', `/productos/${productoAEliminar}`);
+    document.getElementById('delete-modal').classList.remove('show');
+    await recargarProductos();
+  } catch (err) {
+    console.error(err);
+    alert(err.message || 'No se pudo eliminar el producto');
+  } finally {
+    productoAEliminar = null;
+  }
 }
 
 /* ---------- botones que abren/cierran los modales ---------- */
@@ -129,15 +259,21 @@ document.querySelectorAll('[data-open-product-modal]').forEach(btn => {
   btn.addEventListener('click', () => openProductModal());
 });
 
-document.querySelectorAll('[data-edit-product]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const { name, categoria, precio, stock } = btn.dataset;
-    openProductModal(name, categoria, Number(precio), Number(stock));
-  });
-});
+// delegado (no querySelectorAll suelto): los botones de editar/eliminar
+// de cada producto se regeneran dinámicamente en renderProductos(),
+// así que hay que escuchar sobre el documento, no sobre elementos puntuales
+document.addEventListener('click', (e) => {
+  const editBtn = e.target.closest('[data-edit-product]');
+  if (editBtn) {
+    const { id, name, categoria, precio, stock } = editBtn.dataset;
+    openProductModal(id, name, categoria, Number(precio), Number(stock));
+    return;
+  }
 
-document.querySelectorAll('[data-delete-product]').forEach(btn => {
-  btn.addEventListener('click', () => confirmDelete(btn.dataset.deleteProduct));
+  const delBtn = e.target.closest('[data-delete-product]');
+  if (delBtn) {
+    confirmDelete(delBtn.dataset.id, delBtn.dataset.deleteProduct);
+  }
 });
 
 const saveProductBtn = document.querySelector('[data-save-product]');

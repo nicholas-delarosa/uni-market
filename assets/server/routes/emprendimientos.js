@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// GET /api/emprendimientos?universidad_id=1
+// GET /api/emprendimientos?universidad_id=1&usuario_id=2
 router.get('/', async (req, res) => {
-  const { universidad_id } = req.query;
+  const { universidad_id, usuario_id } = req.query;
 
   try {
     const params = [];
@@ -12,6 +12,10 @@ router.get('/', async (req, res) => {
     if (universidad_id) {
       params.push(universidad_id);
       where += ` AND e.universidad_id = $${params.length}`;
+    }
+    if (usuario_id) {
+      params.push(usuario_id);
+      where += ` AND e.usuario_id = $${params.length}`;
     }
 
     const query = `

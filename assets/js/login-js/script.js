@@ -16,3 +16,63 @@ modeToggle.addEventListener("click", () => {
         localStorage.setItem("mode", "light");
     }
 });
+
+/* ================= LOGIN ================= */
+const API_URL = 'http://localhost:3000/api';
+
+const signInForm = document.querySelector('.container-form.sign-in');
+const signInEmail = document.getElementById('signin-email');
+const signInPassword = document.getElementById('signin-password');
+
+// mensaje de error simple, se inserta debajo de la contraseña la primera vez que hace falta
+let errorMsg = document.querySelector('.signin-error');
+if (!errorMsg) {
+  errorMsg = document.createElement('p');
+  errorMsg.className = 'signin-error';
+  errorMsg.style.color = '#e5484d';
+  errorMsg.style.fontSize = '13px';
+  errorMsg.style.display = 'none';
+  signInPassword.closest('label').insertAdjacentElement('afterend', errorMsg);
+}
+
+signInForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorMsg.style.display = 'none';
+
+  const submitBtn = signInForm.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Ingresando...';
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        correo: signInEmail.value.trim(),
+        contrasena: signInPassword.value,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      // el backend responde 401/403 con { error: "..." } cuando el correo o la contraseña no son válidos
+      errorMsg.textContent = data.error || 'No se pudo iniciar sesión';
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    // login correcto: guardamos el usuario para que el resto de la app sepa quién entró
+    localStorage.setItem('um_usuario', JSON.stringify(data.usuario));
+    window.location.href = 'app.html';
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = 'No se pudo conectar con el servidor. ¿Está corriendo el backend?';
+    errorMsg.style.display = 'block';
+  } finally {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  }
+});
