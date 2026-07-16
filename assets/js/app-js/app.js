@@ -352,6 +352,7 @@
           <h3>Cuenta</h3>
           <div class="profile-actions">
             <button class="btn btn-outline btn-sm" id="profileSwitchUni">Cambiar universidad</button>
+            <button class="btn btn-outline btn-sm">Cerrar Sesión</button>
             <button class="btn btn-outline btn-sm">Editar perfil</button>
           </div>
         </div>
