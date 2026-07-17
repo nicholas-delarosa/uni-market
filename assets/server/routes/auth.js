@@ -56,4 +56,45 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// POST /api/auth/register
+router.post('/register', async (req, res) => {
+  const { nombre, apellido, correo, contrasena } = req.body;
+
+  if (!nombre || !correo || !contrasena) {
+    return res.status(400).json({ error: 'Nombre, correo y contraseña son obligatorios' });
+  }
+
+  try {
+    // 1. Verificar que el correo no esté ya registrado
+    const existe = await pool.query(
+      `SELECT id FROM usuarios WHERE correo = $1`,
+      [correo]
+    );
+
+    if (existe.rows.length > 0) {
+      return res.status(409).json({ error: 'Ya existe una cuenta con ese correo' });
+    }
+
+    // 2. Crear el usuario
+    // Nota: universidad_id queda en null porque el formulario de registro
+    // todavía no pide universidad. Si la columna es NOT NULL en la BD,
+    // esta consulta va a fallar y hay que agregar ese campo al formulario.
+    const result = await pool.query(
+      `INSERT INTO usuarios (nombre, apellido, correo, contrasena, activo)
+       VALUES ($1, $2, $3, $4, true)
+       RETURNING id, nombre, apellido, correo, universidad_id, activo`,
+      [nombre, apellido || '', correo, contrasena]
+    );
+
+    const usuario = result.rows[0];
+
+    // 3. Responder igual que /login (mismo shape: { usuario: {...} })
+    // para que el front pueda reusar la misma lógica de guardado en localStorage
+    res.status(201).json({ usuario: { ...usuario, roles: [] } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear la cuenta' });
+  }
+});
+
 module.exports = router;
