@@ -1,0 +1,134 @@
+@use '../app-style/variables' as *;
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+thead th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+tbody td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.cell-prod {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.cell-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+}
+
+.cell-num {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--color-text-muted);
+}
+
+.cell-strong {
+    font-weight: 700;
+}
+
+.cell-muted {
+    color: var(--color-text-muted);
+}
+
+.cell-link {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-violet);
+}
+
+.qty-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qty-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qty-btn .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.qty-val {
+    min-width: 20px;
+    text-align: center;
+    font-weight: 700;
+}
+
+// El SVG de la flechita va embebido como data-uri, así que no puede
+// leer variables CSS: se define un color fijo para cada tema.
+.status-select {
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 6px 26px 6px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-text);
+    background: var(--color-surface)
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="%235b5f6b" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>')
+        no-repeat right 10px center;
+    appearance: none;
+}
+
+[data-theme='dark'] .status-select,
+body.dark-mode .status-select {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="%23a7abba" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>');
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 18px;
+}
+
+.filter-tab {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+}
+
+.filter-tab.active {
+    background: var(--color-btn-primary-bg);
+    color: var(--color-btn-primary-text);
+    border-color: var(--color-btn-primary-bg);
+}

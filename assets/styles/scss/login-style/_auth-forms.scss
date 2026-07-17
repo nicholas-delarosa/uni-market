@@ -1,0 +1,142 @@
+@use '../variables' as *;
+
+.auth-forms {
+    width: 100%;
+}
+
+// Los dos formularios ocupan el mismo espacio y solo se muestra el
+// que tenga la clase .active. Quien haga el JS solo necesita mover
+// esa clase entre los dos .container-form al hacer clic en los
+// botones #registerAs / #loginAs.
+.container-form {
+    width: 100%;
+    display: none;
+    flex-direction: column;
+}
+
+.container-form.active {
+    display: flex;
+    animation: form-in 0.35s ease;
+}
+
+@keyframes form-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.form-head {
+    margin-bottom: 28px;
+}
+
+.form-head h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    letter-spacing: -0.01em;
+}
+
+.form-head span {
+    display: block;
+    margin-top: 8px;
+    font-size: 13.5px;
+    color: var(--color-text-muted);
+}
+
+.container-input {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    margin-bottom: 14px;
+    background-color: var(--color-bg-alt);
+    border: 1.5px solid transparent;
+    border-radius: $radius-sm;
+    transition: border-color 0.18s ease;
+}
+
+.container-input:focus-within {
+    border-color: var(--color-violet);
+}
+
+.container-input .svg {
+    height: 18px;
+    width: 18px;
+    flex-shrink: 0;
+    // Los iconos vienen en negro por defecto; esto los deja del color
+    // de texto tenue del tema activo, para que no desentonen en oscuro.
+    opacity: 0.55;
+}
+
+.container-input input {
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    font-size: 14.5px;
+}
+
+.container-input input::placeholder {
+    color: var(--color-text-faint);
+}
+
+.forgot-link {
+    align-self: flex-end;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-violet);
+    margin-bottom: 22px;
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+.button {
+    width: 100%;
+    height: 48px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 100px;
+    background: var(--color-btn-primary-bg);
+    color: var(--color-btn-primary-text);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+}
+
+.button:focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 2px;
+}
+
+.form-switch {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--color-text-muted);
+}
+
+.form-switch button {
+    font-weight: 700;
+    color: var(--color-violet);
+}
+
+.form-switch button:hover {
+    text-decoration: underline;
+}
+
+.sign-up .container-input {
+    margin-bottom: 14px;
+}

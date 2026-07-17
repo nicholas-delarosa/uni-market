@@ -1,0 +1,157 @@
+@use 'variables' as *;
+
+.profile-wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.profile-card {
+    background: var(--color-surface);
+    border-radius: $radius-lg;
+    border: 1px solid var(--color-border);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.avatar-lg {
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-violet), var(--color-orange));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 26px;
+    flex-shrink: 0;
+}
+
+.profile-name {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.profile-sub {
+    font-size: 13.5px;
+    color: var(--color-text-faint);
+}
+
+.profile-uni-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-violet);
+    background: var(--color-violet-soft);
+    padding: 6px 12px;
+    border-radius: 100px;
+}
+
+.profile-uni-tag img {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.stat-box {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: $radius-md;
+    padding: 18px;
+    text-align: center;
+}
+
+.stat-box b {
+    display: block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+}
+
+.stat-box span {
+    font-size: 12px;
+    color: var(--color-text-faint);
+}
+
+.profile-section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: $radius-md;
+    padding: 22px;
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.profile-section h3 {
+    font-size: 15px;
+    margin-bottom: 14px;
+}
+
+.profile-fav-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-fav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13.5px;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.profile-fav-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.profile-fav-item .name {
+    font-weight: 600;
+}
+
+.profile-fav-item .price {
+    margin-left: auto;
+    font-weight: 700;
+}
+
+.profile-fav-empty {
+    font-size: 13.5px;
+    color: var(--color-text-faint);
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+@media (max-width: 760px) {
+    .profile-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+}

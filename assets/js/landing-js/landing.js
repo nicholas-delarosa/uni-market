@@ -1,15 +1,9 @@
-// Todo lo que le da vida a la landing vive acá: el cambio de tema,
-// el menú de móvil, el header que gana sombra al hacer scroll, la
-// animación de entrada de las secciones y el carrusel de universidades.
-
 const THEME_STORAGE_KEY = 'unimarket-theme';
 
 function initThemeToggle() {
     const toggle = document.getElementById('themeToggle');
     if (!toggle) return;
 
-    // El atributo data-theme ya se puso en el <head> antes de pintar
-    // la página (para evitar el parpadeo), acá solo lo leemos.
     const applyState = (theme) => {
         toggle.setAttribute('aria-pressed', String(theme === 'dark'));
         toggle.setAttribute(
@@ -99,8 +93,6 @@ function initUniversitiesMarquee() {
     let resumeTimeout = null;
     const speed = 0.25; // píxeles por frame
 
-    // Duplicamos el contenido del track una vez más para que el
-    // scroll automático pueda hacer loop sin que se note el corte.
     track.innerHTML += track.innerHTML;
     const halfWidth = () => track.scrollWidth / 2;
 
