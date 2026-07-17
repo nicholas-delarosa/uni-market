@@ -30,7 +30,7 @@ async function apiSend(method, path, body) {
 async function recargarProductos() {
   if (!miEmprendimiento) return;
   misProductos = await apiGet(`/productos?emprendimiento_id=${miEmprendimiento.id}`);
-  renderProductos();
+  renderTodo();
 }
 
 function formatPrecio(n) {
@@ -75,6 +75,186 @@ function renderProductos() {
   }).join('');
 }
 
+function renderInventarioTabla() {
+  const tbody = document.querySelector('#view-inventario tbody');
+  if (!tbody) return;
+
+  if (!misProductos.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-hint">Todavía no tienes productos para mostrar aquí.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = misProductos.map(p => {
+    const info = stockInfo(p.stock, p.stockMinimo);
+    return `
+      <tr>
+        <td><div class="cell-prod"><div class="cell-thumb" style="background-image:url('${p.image}'); background-size:cover; background-position:center;"></div>${p.name}</div></td>
+        <td>${p.category || ''}</td>
+        <td>
+          <div class="qty-control" data-product-id="${p.id}">
+            <button class="qty-btn" data-qty="-1"><svg class="icon"><use href="#ic-minus"/></svg></button>
+            <span class="qty-val">${p.stock}</span>
+            <button class="qty-btn" data-qty="1"><svg class="icon"><use href="#ic-plus"/></svg></button>
+          </div>
+        </td>
+        <td><span class="pill ${info.pill}">${info.label}</span></td>
+        <td><a href="#" class="cell-link" data-edit-product data-id="${p.id}" data-name="${p.name}" data-categoria="${p.category || ''}" data-precio="${p.price}" data-stock="${p.stock}">Editar producto</a></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderBajoInventarioDashboard() {
+  const bajos = misProductos.filter(p => p.stock <= p.stockMinimo);
+
+  const statNum = document.querySelector('[data-view="inventario"].stat-card .stat-num');
+  if (statNum) statNum.textContent = `${bajos.length} producto${bajos.length === 1 ? '' : 's'}`;
+
+  const panel = document.querySelectorAll('.panel')[1]; // panel "Bajo inventario" del dashboard
+  if (!panel) return;
+
+  // limpia las filas de ejemplo y pinta las reales
+  panel.querySelectorAll('.stock-row').forEach(row => row.remove());
+
+  if (!bajos.length) {
+    panel.insertAdjacentHTML('beforeend', `<p class="empty-hint">Todo tu inventario está en buen nivel 🎉</p>`);
+    return;
+  }
+
+  bajos.slice(0, 4).forEach(p => {
+    const info = stockInfo(p.stock, p.stockMinimo);
+    panel.insertAdjacentHTML('beforeend', `
+      <div class="stock-row">
+        <div class="stock-thumb" style="background-image:url('${p.image}'); background-size:cover; background-position:center;"></div>
+        <div class="stock-info"><div class="stock-name">${p.name}</div><div class="stock-qty">${info.texto}</div></div>
+        <span class="pill ${info.pill}">${info.label}</span>
+      </div>
+    `);
+  });
+}
+
+function renderTodo() {
+  renderProductos();
+  renderInventarioTabla();
+  renderBajoInventarioDashboard();
+}
+
+/* ---------- pedidos ---------- */
+const ESTADO_LABELS = {
+  pendiente: 'Pendiente',
+  confirmado: 'Confirmado',
+  entregado: 'Entregado',
+  cancelado: 'Cancelado',
+};
+const ESTADO_PILL = {
+  pendiente: 'pill-amber',
+  confirmado: 'pill-violet',
+  entregado: 'pill-green',
+  cancelado: 'pill-red',
+};
+
+function formatFechaPedido(fechaIso) {
+  const fecha = new Date(fechaIso);
+  const hoy = new Date();
+  const ayer = new Date(hoy);
+  ayer.setDate(hoy.getDate() - 1);
+
+  const esMismoDia = (a, b) => a.toDateString() === b.toDateString();
+  const hora = fecha.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  if (esMismoDia(fecha, hoy)) return `Hoy, ${hora}`;
+  if (esMismoDia(fecha, ayer)) return `Ayer, ${hora}`;
+  return `${fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}, ${hora}`;
+}
+
+let misPedidos = [];
+let filtroEstadoPedido = null; // null = "Todos"
+
+async function cargarPedidos() {
+  if (!miEmprendimiento) return;
+  const filtro = filtroEstadoPedido ? `&estado=${filtroEstadoPedido}` : '';
+  misPedidos = await apiGet(`/pedidos?emprendimiento_id=${miEmprendimiento.id}${filtro}`);
+  renderPedidosTabla();
+}
+
+function renderPedidosTabla() {
+  const tbody = document.querySelector('#view-pedidos tbody');
+  if (!tbody) return;
+
+  if (!misPedidos.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-hint">No hay pedidos que coincidan con este filtro.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = misPedidos.map(pedido => `
+    <tr>
+      <td class="cell-num">#${pedido.id}</td>
+      <td>${pedido.cliente}</td>
+      <td>${pedido.productos}</td>
+      <td class="cell-strong">${formatPrecio(pedido.total)}</td>
+      <td class="cell-muted">${formatFechaPedido(pedido.fecha)}</td>
+      <td>
+        <select class="status-select" data-pedido-id="${pedido.id}">
+          ${Object.entries(ESTADO_LABELS).map(([valor, texto]) =>
+            `<option value="${valor}" ${valor === pedido.estado ? 'selected' : ''}>${texto}</option>`
+          ).join('')}
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function cargarResumenDashboard() {
+  if (!miEmprendimiento) return;
+  const resumen = await apiGet(`/pedidos/resumen?emprendimiento_id=${miEmprendimiento.id}`);
+  const statCards = document.querySelectorAll('.stat-card');
+
+  // "Pedidos de hoy"
+  if (statCards[0]) {
+    statCards[0].querySelector('.stat-num').textContent = resumen.pedidosHoy;
+    statCards[0].querySelector('.stat-sub').textContent =
+      `${resumen.pendientes} pendiente${resumen.pendientes === 1 ? '' : 's'} por confirmar`;
+  }
+
+  // "Ingresos del mes"
+  if (statCards[1]) {
+    statCards[1].querySelector('.stat-num').textContent = formatPrecio(resumen.ingresosMes);
+    const sub = statCards[1].querySelector('.stat-sub');
+    if (sub) sub.style.display = 'none';
+  }
+
+  // "Producto estrella"
+  if (statCards[2]) {
+    if (resumen.productoEstrella) {
+      statCards[2].querySelector('.stat-num-sm').textContent = resumen.productoEstrella.nombre;
+      statCards[2].querySelector('.stat-sub').textContent = `${resumen.productoEstrella.vendidos} vendidos este mes`;
+    } else {
+      statCards[2].querySelector('.stat-num-sm').textContent = 'Sin ventas';
+      statCards[2].querySelector('.stat-sub').textContent = 'todavía este mes';
+    }
+  }
+
+  // panel "Pedidos recientes"
+  const panelPedidos = document.querySelectorAll('.panel')[0];
+  if (panelPedidos) {
+    panelPedidos.querySelectorAll('.order-row').forEach(row => row.remove());
+    if (!resumen.recientes.length) {
+      panelPedidos.insertAdjacentHTML('beforeend', `<p class="empty-hint">Todavía no tienes pedidos.</p>`);
+    } else {
+      resumen.recientes.forEach(p => {
+        panelPedidos.insertAdjacentHTML('beforeend', `
+          <div class="order-row">
+            <span class="order-id">#${p.id}</span>
+            <div class="order-info"><div class="order-client">${p.cliente}</div><div class="order-items">${p.productos}</div></div>
+            <span class="pill ${ESTADO_PILL[p.estado]}">${ESTADO_LABELS[p.estado]}</span>
+            <span class="order-total">${formatPrecio(p.total)}</span>
+          </div>
+        `);
+      });
+    }
+  }
+}
+
 async function cargarMiTienda() {
   try {
     // 1. encontrar el emprendimiento del usuario logueado
@@ -90,6 +270,11 @@ async function cargarMiTienda() {
     const storeNameEl = document.querySelector('.store-name');
     if (storeNameEl) storeNameEl.textContent = miEmprendimiento.name;
 
+    const chipNameEl = document.querySelector('.user-chip-name');
+    if (chipNameEl) chipNameEl.textContent = `${usuarioGuardado.nombre} ${usuarioGuardado.apellido.charAt(0)}.`;
+    const chipAvatarEl = document.querySelector('.user-chip .avatar');
+    if (chipAvatarEl) chipAvatarEl.textContent = (usuarioGuardado.nombre[0] + usuarioGuardado.apellido[0]).toUpperCase();
+
     pageMeta.dashboard.title = `Hola, ${usuarioGuardado.nombre} 👋`;
     pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
     document.getElementById('page-title').textContent = pageMeta.dashboard.title;
@@ -97,7 +282,10 @@ async function cargarMiTienda() {
 
     // 3. traer y pintar los productos reales
     misProductos = await apiGet(`/productos?emprendimiento_id=${miEmprendimiento.id}`);
-    renderProductos();
+    renderTodo();
+
+    // 4. pedidos: tabla completa + resumen del dashboard
+    await Promise.all([cargarPedidos(), cargarResumenDashboard()]);
   } catch (err) {
     console.error(err);
   }
@@ -128,8 +316,7 @@ function switchView(view) {
 
 // Un solo listener delegado para cualquier elemento con data-view: los
 // botones del menú lateral, la tarjeta de "bajo inventario", los links
-// "ver todos/ver todo" y el botón de acciones rápidas. Antes cada uno
-// tenía su propio onclick repitiendo lo mismo.
+// "ver todos/ver todo" y el botón de acciones rápidas.
 document.addEventListener('click', (e) => {
   const trigger = e.target.closest('[data-view]');
   if (!trigger) return;
@@ -138,7 +325,7 @@ document.addEventListener('click', (e) => {
 });
 
 /* ---------- estado abierto / cerrado de la tienda ---------- */
-// [DB] al conectar backend: enviar PATCH /api/emprendimientos/:id { abierto: bool }
+//enviar PATCH /api/emprendimientos/:id { abierto: bool }
 let tiendaAbierta = true;
 
 function pintarEstadoTienda() {
@@ -168,14 +355,14 @@ function pintarEstadoTienda() {
 function toggleTienda() {
   tiendaAbierta = !tiendaAbierta;
   pintarEstadoTienda();
-  // [DB]: aquí va la llamada real para persistir el cambio, ej.
-  // fetch(`/api/emprendimientos/${id}`, { method:'PATCH', body: JSON.stringify({ abierto: tiendaAbierta }) })
+  //aquí va la llamada real para persistir el cambio.
+  // ejemplo : fetch(`/api/emprendimientos/${id}`, { method:'PATCH', body: JSON.stringify({ abierto: tiendaAbierta }) })
 }
 document.getElementById('status-switch').addEventListener('click', toggleTienda);
 document.getElementById('status-switch-2').addEventListener('click', toggleTienda);
 pintarEstadoTienda();
 
-/* ---------- modal: agregar / editar producto ---------- */
+/* -------- agregar / editar producto ---------- */
 let productoEnEdicionId = null;
 
 function openProductModal(id, nombre, categoria, precio, stock) {
@@ -259,7 +446,7 @@ document.querySelectorAll('[data-open-product-modal]').forEach(btn => {
   btn.addEventListener('click', () => openProductModal());
 });
 
-// delegado (no querySelectorAll suelto): los botones de editar/eliminar
+//los botones de editar/eliminar
 // de cada producto se regeneran dinámicamente en renderProductos(),
 // así que hay que escuchar sobre el documento, no sobre elementos puntuales
 document.addEventListener('click', (e) => {
@@ -282,7 +469,7 @@ if (saveProductBtn) saveProductBtn.addEventListener('click', saveProduct);
 const confirmDeleteBtn = document.querySelector('[data-confirm-delete]');
 if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', deleteProductConfirmed);
 
-// Cierre genérico: cualquier botón con data-modal-close cierra el
+// Cualquier botón con data-modal-close cierra el
 // modal-overlay más cercano, sin importar cuál de los dos modales sea.
 document.querySelectorAll('[data-modal-close]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -295,26 +482,70 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
 });
 
-/* ---------- filtros de pedidos (tabs) ---------- */
+/* ---------- filtros de pedidos ---------- */
+const FILTRO_TAB_ESTADO = {
+  'Todos': null,
+  'Pendientes': 'pendiente',
+  'Confirmados': 'confirmado',
+  'Entregados': 'entregado',
+};
+
 document.querySelectorAll('.filter-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    // [DB]: al conectar backend, volver a pedir /api/pedidos?estado=... según el tab activo
+    filtroEstadoPedido = FILTRO_TAB_ESTADO[tab.textContent.trim()] ?? null;
+    cargarPedidos();
   });
 });
 
+/* ---------- cambiar el estado de un pedido ---------- */
+// delegado: las filas de la tabla de pedidos se regeneran dinámicamente
+document.addEventListener('change', async (e) => {
+  const select = e.target.closest('.status-select');
+  if (!select) return;
+
+  const pedidoId = select.dataset.pedidoId;
+  const nuevoEstado = select.value;
+  const estadoAnterior = misPedidos.find(p => p.id == pedidoId)?.estado;
+
+  try {
+    await apiSend('PATCH', `/pedidos/${pedidoId}`, { estado: nuevoEstado });
+    const pedidoLocal = misPedidos.find(p => p.id == pedidoId);
+    if (pedidoLocal) pedidoLocal.estado = nuevoEstado;
+    await cargarResumenDashboard(); // los números del dashboard pueden cambiar (ej. pendientes)
+  } catch (err) {
+    console.error(err);
+    select.value = estadoAnterior; // revierte el select si falló
+    alert(err.message || 'No se pudo actualizar el estado del pedido');
+  }
+});
+
 /* ---------- +/- de inventario ---------- */
-// [DB] al hacer clic: PATCH /api/inventario/:id { cantidad }
-document.querySelectorAll('.qty-control').forEach(control => {
-  const [minusBtn, valSpan, plusBtn] = control.children;
-  minusBtn.addEventListener('click', () => {
-    const val = Math.max(0, parseInt(valSpan.textContent) - 1);
-    valSpan.textContent = val;
-  });
-  plusBtn.addEventListener('click', () => {
-    valSpan.textContent = parseInt(valSpan.textContent) + 1;
-  });
+document.addEventListener('click', async (e) => {
+  const qtyBtn = e.target.closest('.qty-btn');
+  if (!qtyBtn) return;
+
+  const control = qtyBtn.closest('.qty-control');
+  const valSpan = control.querySelector('.qty-val');
+  const productId = control.dataset.productId;
+  const delta = Number(qtyBtn.dataset.qty);
+
+  const nuevoStock = Math.max(0, parseInt(valSpan.textContent) + delta);
+  valSpan.textContent = nuevoStock; // respuesta visual inmediata
+
+  try {
+    await apiSend('PATCH', `/inventario/${productId}`, { stock: nuevoStock });
+    // sincroniza el resto de las vistas (grilla de productos, panel del dashboard)
+    // sin volver a pedir todo a la API, ya que solo cambió este producto
+    const producto = misProductos.find(p => p.id == productId);
+    if (producto) producto.stock = nuevoStock;
+    renderTodo();
+  } catch (err) {
+    console.error(err);
+    valSpan.textContent = parseInt(valSpan.textContent) - delta; // revierte si falló
+    alert(err.message || 'No se pudo actualizar el inventario');
+  }
 });
 
 /* ---------- modo oscuro ---------- */

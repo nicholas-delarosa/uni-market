@@ -45,7 +45,7 @@
 
   const fmt = (n) => '$ ' + n.toLocaleString('es-CO');
 
-  /* ================= UNIVERSITY SELECTOR ================= */
+  /* ================= Selector universidad ================= */
   const uniSelectorScreen = document.getElementById('uniSelectorScreen');
   const appShell = document.getElementById('appShell');
   const uniGrid = document.getElementById('uniGrid');
@@ -95,7 +95,7 @@
     renderUniGrid();
   }
 
-  /* ================= VIEW ROUTING ================= */
+  /* ================= ENRUTAMIENTO VSTA ================= */
   const content = document.getElementById('content');
   const topbarTitle = document.getElementById('topbarTitle');
   const topbarSubtitle = document.getElementById('topbarSubtitle');
@@ -142,7 +142,7 @@
     }
   }
 
-  /* ================= CATALOG ================= */
+  /* ================= CATALOGO ================= */
   function getUniProducts() {
     return products.filter(p => p.universityId === state.university.id);
   }
@@ -271,7 +271,7 @@
     });
   }
 
-  /* ================= SELLERS ================= */
+  /* ================= EMPRENDEDORES ================= */
   function renderSellers() {
     const list = sellers.filter(s => s.universityId === state.university.id);
 
@@ -308,7 +308,7 @@
     });
   }
 
-  /* ================= PROFILE ================= */
+  /* ================= PERFIL ================= */
   function renderProfile() {
     const favIds = [...state.favorites];
     const favProducts = products.filter(p => favIds.includes(p.id));

@@ -42,7 +42,7 @@ btnSwitchLogin.addEventListener("click", () => {
 });
 
 
-// mensaje de error simple, se inserta debajo de la contraseña la primera vez que hace falta
+// mensaje de error que se inserta debajo de la contraseña la primera vez que hace falta
 let errorMsg = document.querySelector('.signin-error');
 if (!errorMsg) {
   errorMsg = document.createElement('p');
