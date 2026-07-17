@@ -1,44 +1,36 @@
-/* ================= DATA ================= */
-  const universities = [
-    { id:'unorte', name:'Universidad del Norte', logo:'assets/src/images/UniNorte.png' },
-    { id:'cuc', name:'Costa Universidad', logo:'assets/src/images/Logo_cuc.png' },
-    { id:'uniautonoma', name:'Uniautónoma', logo:'assets/src/images/Uniautonoma.png' },
-    { id:'simonbolivar', name:'Simón Bolívar', logo:'assets/src/images/Simon Bolivar.png' },
-    { id:'unilibre', name:'Universidad Libre', logo:'assets/src/images/UniLibre.png' },
-    { id:'unimedellin', name:'Univ. de Medellín', logo:'assets/src/images/UdeMedallo.png' },
-    { id:'eia', name:'EIA', logo:'assets/src/images/Logo_EIA.png' },
-    { id:'bolivariana', name:'Bolivariana', logo:'assets/src/images/Bolivariana.jpg' },
-    { id:'udea', name:'U. de Antioquia', logo:'assets/src/images/UDEA.jpg' },
-  ];
+/* ================= API ================= */
+  const API_URL = 'http://localhost:3000/api';
 
-  const sellers = [
-    { id:'s1', name:'Postres Camila', universityId:'unorte', categories:['Comida'], products:6, rating:4.9, avatar:'https://picsum.photos/seed/postres-camila-logo/160/160' },
-    { id:'s2', name:'TechFix Uninorte', universityId:'unorte', categories:['Tecnología','Servicios'], products:4, rating:4.7, avatar:'https://picsum.photos/seed/techfix-logo/160/160' },
-    { id:'s3', name:'Laura Design Studio', universityId:'unorte', categories:['Diseño'], products:5, rating:5.0, avatar:'https://picsum.photos/seed/laura-design-logo/160/160' },
-    { id:'s4', name:'Urban Style CUC', universityId:'cuc', categories:['Moda'], products:3, rating:4.6, avatar:'https://picsum.photos/seed/urban-style-logo/160/160' },
-    { id:'s5', name:'GlowLab Beauty', universityId:'cuc', categories:['Belleza'], products:4, rating:4.8, avatar:'https://picsum.photos/seed/glowlab-logo/160/160' },
-    { id:'s6', name:'Sabores del Campus', universityId:'uniautonoma', categories:['Comida','Servicios'], products:5, rating:4.5, avatar:'https://picsum.photos/seed/sabores-campus-logo/160/160' },
-    { id:'s7', name:'Trazo Estudio', universityId:'unimedellin', categories:['Diseño','Moda'], products:6, rating:4.9, avatar:'https://picsum.photos/seed/trazo-estudio-logo/160/160' },
-  ];
+  async function apiGet(path) {
+    const res = await fetch(`${API_URL}${path}`);
+    if (!res.ok) throw new Error(`Error al llamar ${path}`);
+    return res.json();
+  }
 
-  const products = [
-    { id:'p1', name:'Cheesecake individual', price:14000, category:'Comida', universityId:'unorte', sellerId:'s1', image:'https://picsum.photos/seed/cheesecake/400/360' },
-    { id:'p2', name:'Brownie con nutella', price:8500, category:'Comida', universityId:'unorte', sellerId:'s1', image:'https://picsum.photos/seed/brownie/400/360' },
-    { id:'p3', name:'Diseño de logo para tu emprendimiento', price:65000, category:'Diseño', universityId:'unorte', sellerId:'s3', image:'https://picsum.photos/seed/logo-design/400/360' },
-    { id:'p4', name:'Plantilla de presentación editable', price:22000, category:'Diseño', universityId:'unorte', sellerId:'s3', image:'https://picsum.photos/seed/slides-template/400/360' },
-    { id:'p5', name:'Mantenimiento de PC a domicilio', price:35000, category:'Tecnología', universityId:'unorte', sellerId:'s2', image:'https://picsum.photos/seed/pc-repair/400/360' },
-    { id:'p6', name:'Fundas para laptop personalizadas', price:28000, category:'Tecnología', universityId:'unorte', sellerId:'s2', image:'https://picsum.photos/seed/laptop-case/400/360' },
-    { id:'p7', name:'Tutoría de cálculo (1 hora)', price:20000, category:'Servicios', universityId:'unorte', sellerId:'s2', image:'https://picsum.photos/seed/tutoring/400/360' },
-    { id:'p8', name:'Camiseta estampada Uninorte', price:39000, category:'Moda', universityId:'unorte', sellerId:'s3', image:'https://picsum.photos/seed/tshirt-print/400/360' },
-    { id:'p9', name:'Aretes artesanales', price:15000, category:'Moda', universityId:'cuc', sellerId:'s4', image:'https://picsum.photos/seed/earrings/400/360' },
-    { id:'p10', name:'Gorras bordadas a pedido', price:32000, category:'Moda', universityId:'cuc', sellerId:'s4', image:'https://picsum.photos/seed/caps/400/360' },
-    { id:'p11', name:'Set de skincare facial', price:48000, category:'Belleza', universityId:'cuc', sellerId:'s5', image:'https://picsum.photos/seed/skincare/400/360' },
-    { id:'p12', name:'Peinados para eventos', price:60000, category:'Belleza', universityId:'cuc', sellerId:'s5', image:'https://picsum.photos/seed/hairstyle/400/360' },
-    { id:'p13', name:'Empanadas por docena', price:24000, category:'Comida', universityId:'uniautonoma', sellerId:'s6', image:'https://picsum.photos/seed/empanadas/400/360' },
-    { id:'p14', name:'Diseño de invitaciones digitales', price:18000, category:'Diseño', universityId:'uniautonoma', sellerId:'s6', image:'https://picsum.photos/seed/invitations/400/360' },
-    { id:'p15', name:'Ilustración digital personalizada', price:45000, category:'Diseño', universityId:'unimedellin', sellerId:'s7', image:'https://picsum.photos/seed/illustration/400/360' },
-    { id:'p16', name:'Bolsos tejidos a mano', price:52000, category:'Moda', universityId:'unimedellin', sellerId:'s7', image:'https://picsum.photos/seed/handbag/400/360' },
-  ];
+  // El logo de cada universidad NO vive en la base de datos:
+  // son un conjunto fijo de imágenes que ya están en el repo,
+  // así que se resuelven acá por nombre.
+  const LOGO_FALLBACK = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+       <rect width="64" height="64" rx="10" fill="#e9e9f0"/>
+     </svg>`
+  );
+  const LOGOS_UNIVERSIDAD = {
+    'Universidad del Norte': '/assets/src/images/UniNorte.png',
+    'Costa Universidad':     '/assets/src/images/Logo_cuc.png',
+    'Uniautónoma':           '/assets/src/images/Uniautonoma.png',
+    'Simón Bolívar':         '/assets/src/images/Simon Bolivar.png',
+    'Universidad Libre':     '/assets/src/images/UniLibre.png',
+    'Univ. de Medellín':     '/assets/src/images/UdeMedallo.png',
+    'EIA':                   '/assets/src/images/Logo_EIA.png',
+    'Bolivariana':           '/assets/src/images/Bolivariana.jpg',
+    'U. de Antioquia':       '/assets/src/images/UDEA.jpg',
+  };
+
+  /* ================= DATA (se llenan desde la API) ================= */
+  let universities = [];
+  let sellers = [];
+  let products = [];
 
   /* ================= STATE ================= */
   const state = {
@@ -53,7 +45,7 @@
 
   const fmt = (n) => '$ ' + n.toLocaleString('es-CO');
 
-  /* ================= UNIVERSITY SELECTOR ================= */
+  /* ================= Selector universidad ================= */
   const uniSelectorScreen = document.getElementById('uniSelectorScreen');
   const appShell = document.getElementById('appShell');
   const uniGrid = document.getElementById('uniGrid');
@@ -76,11 +68,18 @@
 
   uniSearchInput.addEventListener('input', (e) => renderUniGrid(e.target.value));
 
-  function selectUniversity(id) {
-    const uni = universities.find(u => u.id === id);
+  async function selectUniversity(id) {
+    const uni = universities.find(u => u.id == id);
     if (!uni) return;
     state.university = uni;
     localStorage.setItem('um_university', id);
+
+    // trae los emprendimientos y productos de ESA universidad desde la API
+    [sellers, products] = await Promise.all([
+      apiGet(`/emprendimientos?universidad_id=${uni.id}`),
+      apiGet(`/productos?universidad_id=${uni.id}`),
+    ]);
+
     uniSelectorScreen.style.display = 'none';
     appShell.style.display = 'flex';
     document.getElementById('sidebarUniImg').src = uni.logo;
@@ -96,7 +95,7 @@
     renderUniGrid();
   }
 
-  /* ================= VIEW ROUTING ================= */
+  /* ================= ENRUTAMIENTO VSTA ================= */
   const content = document.getElementById('content');
   const topbarTitle = document.getElementById('topbarTitle');
   const topbarSubtitle = document.getElementById('topbarSubtitle');
@@ -143,7 +142,7 @@
     }
   }
 
-  /* ================= CATALOG ================= */
+  /* ================= CATALOGO ================= */
   function getUniProducts() {
     return products.filter(p => p.universityId === state.university.id);
   }
@@ -185,7 +184,7 @@
     if (state.view !== 'catalog') return;
     let list = getUniProducts();
 
-    if (state.sellerFilter) list = list.filter(p => p.sellerId === state.sellerFilter);
+    if (state.sellerFilter) list = list.filter(p => p.sellerId == state.sellerFilter);
     if (state.category !== 'all') list = list.filter(p => p.category === state.category);
     if (state.search.trim()) {
       const q = state.search.trim().toLowerCase();
@@ -202,7 +201,7 @@
 
     if (sellerChipWrap) {
       if (state.sellerFilter) {
-        const seller = sellers.find(s => s.id === state.sellerFilter);
+        const seller = sellers.find(s => s.id == state.sellerFilter);
         sellerChipWrap.innerHTML = `
           <span class="filter-chip">Emprendimiento: ${seller ? seller.name : ''}
             <button id="clearSellerFilter">✕</button>
@@ -272,7 +271,7 @@
     });
   }
 
-  /* ================= SELLERS ================= */
+  /* ================= EMPRENDEDORES ================= */
   function renderSellers() {
     const list = sellers.filter(s => s.universityId === state.university.id);
 
@@ -309,7 +308,7 @@
     });
   }
 
-  /* ================= PROFILE ================= */
+  /* ================= PERFIL ================= */
   function renderProfile() {
     const favIds = [...state.favorites];
     const favProducts = products.filter(p => favIds.includes(p.id));
@@ -353,6 +352,7 @@
           <h3>Cuenta</h3>
           <div class="profile-actions">
             <button class="btn btn-outline btn-sm" id="profileSwitchUni">Cambiar universidad</button>
+            <button class="btn btn-outline btn-sm">Cerrar Sesión</button>
             <button class="btn btn-outline btn-sm">Editar perfil</button>
           </div>
         </div>
@@ -362,11 +362,20 @@
   }
 
   /* ================= INIT ================= */
-  renderUniGrid();
-  const savedUniId = localStorage.getItem('um_university');
-  if (savedUniId && universities.some(u => u.id === savedUniId)) {
-    selectUniversity(savedUniId);
+  async function init() {
+    universities = await apiGet('/universidades');
+    universities = universities.map(u => ({
+      ...u,
+      logo: LOGOS_UNIVERSIDAD[u.name] || LOGO_FALLBACK,
+    }));
+    renderUniGrid();
+
+    const savedUniId = localStorage.getItem('um_university');
+    if (savedUniId && universities.some(u => u.id == savedUniId)) {
+      selectUniversity(savedUniId);
+    }
   }
+  init();
 
 
   /* ================ DARK MODE ============== */
