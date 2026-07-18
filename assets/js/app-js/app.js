@@ -7,6 +7,65 @@
     return res.json();
   }
 
+  async function apiPost(path, body) {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Error en POST ${path}`);
+    return res.json();
+  }
+
+  async function apiPut(path, body) {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Error en PUT ${path}`);
+    return res.json();
+  }
+
+  /* ================= AUTENTICACIÓN ================= */
+  let currentUser = null;
+
+  async function validateAndLoadUser() {
+    // 1. Verificar si existe usuario en localStorage
+    const savedUser = localStorage.getItem('um_usuario');
+    if (!savedUser) {
+      window.location.href = 'login.html';
+      return null;
+    }
+
+    try {
+      const user = JSON.parse(savedUser);
+
+      // 2. Validar contra el backend
+      const response = await fetch(`${API_URL}/auth/me/${user.id}`);
+      if (!response.ok) {
+        localStorage.removeItem('um_usuario');
+        window.location.href = 'login.html';
+        return null;
+      }
+
+      const data = await response.json();
+      currentUser = data.usuario;
+      localStorage.setItem('um_usuario', JSON.stringify(currentUser));
+      return currentUser;
+    } catch (err) {
+      console.error('Error validando usuario:', err);
+      localStorage.removeItem('um_usuario');
+      window.location.href = 'login.html';
+      return null;
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('um_usuario');
+    window.location.href = 'login.html';
+  }
+
   // El logo de cada universidad NO vive en la base de datos:
   // son un conjunto fijo de imágenes que ya están en el repo,
   // así que se resuelven acá por nombre.
@@ -40,7 +99,7 @@
     category: 'all',
     sellerFilter: null,
     sort: 'relevance',
-    favorites: new Set(JSON.parse(localStorage.getItem('um_favorites') || '[]')),
+    favorites: [], // Array de IDs de productos favoritos, se cargará desde BD
   };
 
   const fmt = (n) => '$ ' + n.toLocaleString('es-CO');
@@ -71,21 +130,39 @@
   async function selectUniversity(id) {
     const uni = universities.find(u => u.id == id);
     if (!uni) return;
-    state.university = uni;
-    localStorage.setItem('um_university', id);
+    
+    try {
+      // Guardar la universidad en la BD
+      const response = await apiPut(`/auth/universidad/${currentUser.id}`, {
+        universidad_id: uni.id
+      });
+      
+      // Actualizar datos del usuario actual
+      currentUser = response.usuario;
+      localStorage.setItem('um_usuario', JSON.stringify(currentUser));
+      
+      state.university = uni;
+      localStorage.setItem('um_university', id);
 
-    // trae los emprendimientos y productos de ESA universidad desde la API
-    [sellers, products] = await Promise.all([
-      apiGet(`/emprendimientos?universidad_id=${uni.id}`),
-      apiGet(`/productos?universidad_id=${uni.id}`),
-    ]);
+      // trae los emprendimientos y productos de ESA universidad desde la API
+      [sellers, products] = await Promise.all([
+        apiGet(`/emprendimientos?universidad_id=${uni.id}`),
+        apiGet(`/productos?universidad_id=${uni.id}`),
+      ]);
 
-    uniSelectorScreen.style.display = 'none';
-    appShell.style.display = 'flex';
-    document.getElementById('sidebarUniImg').src = uni.logo;
-    document.getElementById('sidebarUniImg').alt = uni.name;
-    document.getElementById('sidebarUniName').textContent = uni.name;
-    setView('catalog');
+      // Cargar favoritos del usuario
+      await loadFavoritos();
+
+      uniSelectorScreen.style.display = 'none';
+      appShell.style.display = 'flex';
+      document.getElementById('sidebarUniImg').src = uni.logo;
+      document.getElementById('sidebarUniImg').alt = uni.name;
+      document.getElementById('sidebarUniName').textContent = uni.name;
+      setView('catalog');
+    } catch (err) {
+      console.error('Error seleccionando universidad:', err);
+      alert('Error al guardar la universidad. Intenta de nuevo.');
+    }
   }
 
   function openUniSelector() {
@@ -117,6 +194,8 @@
     });
   });
   document.getElementById('sidebarUniSwitch').addEventListener('click', openUniSelector);
+  document.getElementById('sidebarLogout').addEventListener('click', logout);
+  document.getElementById('cartButton').addEventListener('click', renderCartModal);
 
   searchInput.addEventListener('input', (e) => {
     state.search = e.target.value;
@@ -234,7 +313,7 @@
 
     grid.innerHTML = list.map(p => {
       const seller = sellers.find(s => s.id === p.sellerId);
-      const isFav = state.favorites.has(p.id);
+      const isFav = state.favorites.includes(p.id);
       return `
         <div class="product-card">
           <div class="product-photo">
@@ -248,19 +327,23 @@
             <div class="product-name">${p.name}</div>
             <div class="product-seller"><button data-seller="${p.sellerId}">${seller ? seller.name : ''}</button></div>
             <div class="product-price">${fmt(p.price)}</div>
-            <button class="btn product-cta">Ver producto</button>
+            <button class="btn product-cta" data-add-to-cart="${p.id}">Agregar al carrito</button>
           </div>
         </div>
       `;
     }).join('');
 
     grid.querySelectorAll('[data-fav]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.fav;
-        if (state.favorites.has(id)) state.favorites.delete(id);
-        else state.favorites.add(id);
-        localStorage.setItem('um_favorites', JSON.stringify([...state.favorites]));
+      btn.addEventListener('click', async () => {
+        const id = parseInt(btn.dataset.fav);
+        await toggleFavorito(id);
         renderCatalogGrid();
+      });
+    });
+    grid.querySelectorAll('[data-add-to-cart]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const productId = parseInt(btn.dataset.addToCart);
+        addToCart(productId, 1);
       });
     });
     grid.querySelectorAll('[data-seller]').forEach(btn => {
@@ -313,13 +396,21 @@
     const favIds = [...state.favorites];
     const favProducts = products.filter(p => favIds.includes(p.id));
 
+    // Calcular iniciales para el avatar
+    const initials = (currentUser.nombre || 'U').charAt(0).toUpperCase() +
+                     (currentUser.apellido || '').charAt(0).toUpperCase();
+    
+    const role = currentUser.roles && currentUser.roles.length > 0 
+      ? currentUser.roles[0] 
+      : 'Usuario';
+
     content.innerHTML = `
       <div class="profile-wrap">
         <div class="profile-card">
-          <div class="avatar-lg">V</div>
+          <div class="avatar-lg">${initials}</div>
           <div>
-            <h3 class="profile-name">Valentina G.</h3>
-            <div class="profile-sub">valentina.g@correo.edu.co · Estudiante</div>
+            <h3 class="profile-name">${currentUser.nombre} ${currentUser.apellido}</h3>
+            <div class="profile-sub">${currentUser.correo} · ${role}</div>
             <span class="profile-uni-tag">
               <img src="${state.university.logo}" alt="" loading="lazy">
               ${state.university.name}
@@ -329,8 +420,15 @@
 
         <div class="profile-stats">
           <div class="stat-box"><b>${favProducts.length}</b><span>Favoritos</span></div>
-          <div class="stat-box"><b>0</b><span>Pedidos</span></div>
-          <div class="stat-box"><b>0</b><span>Reseñas</span></div>
+          <div class="stat-box"><b id="pedidosCount">0</b><span>Pedidos</span></div>
+          <div class="stat-box"><b id="totalGastado">$0</b><span>Invertido</span></div>
+        </div>
+
+        <div class="profile-section">
+          <h3>Historial de compras</h3>
+          <div id="pedidosContainer">
+            <p style="color: var(--color-text-muted); text-align: center; padding: 20px;">Cargando...</p>
+          </div>
         </div>
 
         <div class="profile-section">
@@ -352,31 +450,582 @@
           <h3>Cuenta</h3>
           <div class="profile-actions">
             <button class="btn btn-outline btn-sm" id="profileSwitchUni">Cambiar universidad</button>
-            <button class="btn btn-outline btn-sm">Cerrar Sesión</button>
+            <button class="btn btn-outline btn-sm" id="profileLogout">Cerrar Sesión</button>
             <button class="btn btn-outline btn-sm">Editar perfil</button>
           </div>
         </div>
       </div>
     `;
+    
     document.getElementById('profileSwitchUni').addEventListener('click', openUniSelector);
+    document.getElementById('profileLogout').addEventListener('click', logout);
+    
+    // Cargar historial de pedidos
+    loadUserPedidos();
+  }
+
+  async function loadUserPedidos() {
+    try {
+      const pedidos = await apiGet(`/pedidos?usuario_id=${currentUser.id}`);
+      
+      const container = document.getElementById('pedidosContainer');
+      const countEl = document.getElementById('pedidosCount');
+      const totalEl = document.getElementById('totalGastado');
+      
+      if (pedidos.length === 0) {
+        container.innerHTML = `
+          <p style="color: var(--color-text-muted); text-align: center; padding: 20px;">
+            Aún no tienes pedidos. ¡Comienza a comprar!
+          </p>
+        `;
+        countEl.textContent = '0';
+        totalEl.textContent = '$0';
+      } else {
+        // Calcular totales
+        const totalGastado = pedidos.reduce((sum, p) => sum + parseFloat(p.total || 0), 0);
+        countEl.textContent = pedidos.length;
+        totalEl.textContent = fmt(totalGastado);
+        
+        // Renderizar pedidos
+        container.innerHTML = `
+          <div style="display: grid; gap: 12px;">
+            ${pedidos.map(pedido => `
+              <div style="
+                padding: 16px;
+                border: 1px solid var(--color-border);
+                border-radius: 8px;
+                background: var(--color-surface);
+              ">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <div>
+                    <div style="font-weight: 600;">Pedido #${pedido.id}</div>
+                    <div style="font-size: 12px; color: var(--color-text-muted);">
+                      ${new Date(pedido.fecha).toLocaleDateString('es-CO')}
+                    </div>
+                  </div>
+                  <span style="
+                    padding: 4px 12px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    background: ${
+                      pedido.estado === 'entregado' ? 'var(--color-green-soft)' :
+                      pedido.estado === 'confirmado' ? 'var(--color-mint-soft)' :
+                      pedido.estado === 'pendiente' ? 'var(--color-amber-soft)' :
+                      'var(--color-red-soft)'
+                    };
+                    color: ${
+                      pedido.estado === 'entregado' ? 'var(--color-green)' :
+                      pedido.estado === 'confirmado' ? 'var(--color-mint)' :
+                      pedido.estado === 'pendiente' ? 'var(--color-amber)' :
+                      'var(--color-red)'
+                    };
+                  ">${pedido.estado}</span>
+                </div>
+                <div style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 8px;">
+                  ${pedido.productos}
+                </div>
+                <div style="font-weight: 600; font-size: 16px;">
+                  ${fmt(pedido.total)}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.error('Error cargando pedidos:', err);
+      const container = document.getElementById('pedidosContainer');
+      container.innerHTML = `
+        <p style="color: var(--color-red); text-align: center; padding: 20px;">
+          Error cargando el historial de compras
+        </p>
+      `;
+    }
   }
 
   /* ================= INIT ================= */
   async function init() {
+    // 1. Validar que el usuario esté autenticado
+    const user = await validateAndLoadUser();
+    if (!user) return; // validateAndLoadUser ya redirige a login si hay error
+
+    // 2. Cargar universidades
     universities = await apiGet('/universidades');
     universities = universities.map(u => ({
       ...u,
       logo: LOGOS_UNIVERSIDAD[u.name] || LOGO_FALLBACK,
     }));
-    renderUniGrid();
 
-    const savedUniId = localStorage.getItem('um_university');
-    if (savedUniId && universities.some(u => u.id == savedUniId)) {
-      selectUniversity(savedUniId);
+    // 3. Actualizar topbar con datos del usuario
+    updateTopbar();
+    updateCartBadge();
+
+    // 4. Si el usuario ya tiene universidad asignada, cargar directamente
+    if (currentUser.universidad_id) {
+      const userUni = universities.find(u => u.id === currentUser.universidad_id);
+      if (userUni) {
+        state.university = userUni;
+        localStorage.setItem('um_university', userUni.id);
+        
+        // Cargar datos de la universidad
+        [sellers, products] = await Promise.all([
+          apiGet(`/emprendimientos?universidad_id=${userUni.id}`),
+          apiGet(`/productos?universidad_id=${userUni.id}`),
+        ]);
+
+        // Cargar favoritos del usuario
+        await loadFavoritos();
+
+        uniSelectorScreen.style.display = 'none';
+        appShell.style.display = 'flex';
+        document.getElementById('sidebarUniImg').src = userUni.logo;
+        document.getElementById('sidebarUniImg').alt = userUni.name;
+        document.getElementById('sidebarUniName').textContent = userUni.name;
+        setView('catalog');
+      } else {
+        // Universidad_id no válida, mostrar selector
+        renderUniGrid();
+      }
+    } else {
+      // No tiene universidad, mostrar selector
+      renderUniGrid();
     }
   }
+
+  function updateTopbar() {
+    if (!currentUser) return;
+    
+    const topbarUserName = document.querySelector('.topbar-user-name');
+    const topbarUserRole = document.querySelector('.topbar-user-role');
+    const avatarSm = document.querySelector('.avatar-sm');
+    
+    if (topbarUserName) {
+      topbarUserName.textContent = `${currentUser.nombre} ${currentUser.apellido}`.trim();
+    }
+    
+    if (topbarUserRole) {
+      const role = currentUser.roles && currentUser.roles.length > 0 
+        ? currentUser.roles[0] 
+        : 'Usuario';
+      topbarUserRole.textContent = role;
+    }
+    
+    if (avatarSm) {
+      // Iniciales del nombre
+      const initials = (currentUser.nombre || 'U').charAt(0).toUpperCase() +
+                       (currentUser.apellido || '').charAt(0).toUpperCase();
+      avatarSm.textContent = initials;
+    }
+  }
+
   init();
 
+  /* ================ CARRITO ============== */
+  // Carrito es un array de { productId, cantidad, price, name, image, sellerId }
+  let cart = JSON.parse(localStorage.getItem('um_cart') || '[]');
+
+  function saveCart() {
+    localStorage.setItem('um_cart', JSON.stringify(cart));
+  }
+
+  function addToCart(productId, quantity = 1) {
+    const product = products.find(p => p.id === productId);
+    if (!product) {
+      console.error('Producto no encontrado');
+      return;
+    }
+
+    // Buscar si el producto ya está en el carrito
+    const existing = cart.find(item => item.productId === productId);
+    
+    if (existing) {
+      existing.cantidad += quantity;
+    } else {
+      cart.push({
+        productId,
+        cantidad: quantity,
+        price: product.price,
+        name: product.name,
+        image: product.image,
+        sellerId: product.sellerId,
+        stock: product.stock,
+      });
+    }
+    
+    saveCart();
+    updateCartBadge();
+    showCartNotification();
+  }
+
+  function removeFromCart(productId) {
+    cart = cart.filter(item => item.productId !== productId);
+    saveCart();
+    updateCartBadge();
+  }
+
+  function updateCartQuantity(productId, cantidad) {
+    const item = cart.find(i => i.productId === productId);
+    if (item) {
+      item.cantidad = Math.max(1, cantidad);
+      saveCart();
+      updateCartBadge();
+    }
+  }
+
+  function clearCart() {
+    cart = [];
+    saveCart();
+    updateCartBadge();
+  }
+
+  function getCartTotal() {
+    return cart.reduce((sum, item) => sum + (item.price * item.cantidad), 0);
+  }
+
+  function getCartItemsCount() {
+    return cart.reduce((sum, item) => sum + item.cantidad, 0);
+  }
+
+  function updateCartBadge() {
+    // Actualizar badge del carrito si existe en el topbar
+    const badge = document.querySelector('.cart-badge');
+    const count = getCartItemsCount();
+    
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
+
+  function showCartNotification() {
+    // Mostrar notificación de producto agregado
+    const count = getCartItemsCount();
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--color-mint);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+      font-weight: 600;
+    `;
+    notification.textContent = `✓ Producto agregado (${count} en carrito)`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 2500);
+  }
+
+  function renderCartModal() {
+    if (cart.length === 0) {
+      alert('Tu carrito está vacío');
+      return;
+    }
+
+    const modalHtml = `
+      <div id="cartModal" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: flex;
+        align-items: flex-end;
+      ">
+        <div style="
+          background: var(--color-surface);
+          width: 100%;
+          max-width: 500px;
+          max-height: 90vh;
+          border-radius: 16px 16px 0 0;
+          display: flex;
+          flex-direction: column;
+          animation: slideUp 0.3s ease-out;
+          margin-left: auto;
+          margin-right: auto;
+        ">
+          <!-- Header -->
+          <div style="
+            padding: 20px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          ">
+            <h3 style="margin: 0;">Carrito de compra</h3>
+            <button id="closeCart" style="
+              background: none;
+              border: none;
+              font-size: 24px;
+              cursor: pointer;
+              color: var(--color-text-muted);
+            ">×</button>
+          </div>
+
+          <!-- Items -->
+          <div style="
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+          " id="cartItems">
+          </div>
+
+          <!-- Footer -->
+          <div style="
+            padding: 20px;
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          ">
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              font-size: 14px;
+              color: var(--color-text-muted);
+            ">
+              <span>Subtotal:</span>
+              <span id="subtotal">$0</span>
+            </div>
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              font-size: 18px;
+              font-weight: 700;
+            ">
+              <span>Total:</span>
+              <span id="totalCart">$0</span>
+            </div>
+            <button id="checkoutBtn" class="btn btn-primary" style="width: 100%;">
+              Confirmar compra
+            </button>
+            <button id="clearCartBtn" class="btn btn-ghost" style="width: 100%; color: var(--color-red);">
+              Vaciar carrito
+            </button>
+          </div>
+        </div>
+      </div>
+      <style>
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(400px); }
+          to { transform: translateX(0); }
+        }
+      </style>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Renderizar items
+    const itemsContainer = document.getElementById('cartItems');
+    itemsContainer.innerHTML = cart.map(item => `
+      <div style="
+        padding: 12px;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        display: grid;
+        grid-template-columns: 80px 1fr 80px;
+        gap: 12px;
+        align-items: center;
+      ">
+        <img src="${item.image}" alt="${item.name}" style="
+          width: 80px;
+          height: 80px;
+          object-fit: cover;
+          border-radius: 6px;
+        ">
+        <div>
+          <div style="font-weight: 600; margin-bottom: 4px;">${item.name}</div>
+          <div style="font-size: 14px; color: var(--color-text-muted); margin-bottom: 8px;">
+            ${fmt(item.price)} c/u
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="item-qty-btn" data-product="${item.productId}" data-action="minus" style="
+              width: 24px;
+              height: 24px;
+              border: 1px solid var(--color-border);
+              border-radius: 4px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">−</button>
+            <span style="width: 20px; text-align: center;">${item.cantidad}</span>
+            <button class="item-qty-btn" data-product="${item.productId}" data-action="plus" style="
+              width: 24px;
+              height: 24px;
+              border: 1px solid var(--color-border);
+              border-radius: 4px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">+</button>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-weight: 600;">${fmt(item.price * item.cantidad)}</div>
+          <button class="remove-item" data-product="${item.productId}" style="
+            background: none;
+            border: none;
+            color: var(--color-red);
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: underline;
+            margin-top: 8px;
+          ">Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Actualizar totales
+    const total = getCartTotal();
+    document.getElementById('subtotal').textContent = fmt(total);
+    document.getElementById('totalCart').textContent = fmt(total);
+
+    // Event listeners
+    document.getElementById('closeCart').addEventListener('click', () => {
+      document.getElementById('cartModal').remove();
+    });
+
+    document.getElementById('clearCartBtn').addEventListener('click', () => {
+      if (confirm('¿Vaciar el carrito?')) {
+        clearCart();
+        document.getElementById('cartModal').remove();
+      }
+    });
+
+    document.getElementById('checkoutBtn').addEventListener('click', checkout);
+
+    document.querySelectorAll('.item-qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const productId = parseInt(btn.dataset.product);
+        const action = btn.dataset.action;
+        const item = cart.find(i => i.productId === productId);
+        if (item) {
+          if (action === 'plus') {
+            updateCartQuantity(productId, item.cantidad + 1);
+          } else if (action === 'minus' && item.cantidad > 1) {
+            updateCartQuantity(productId, item.cantidad - 1);
+          }
+          renderCartModal();
+        }
+      });
+    });
+
+    document.querySelectorAll('.remove-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const productId = parseInt(btn.dataset.product);
+        removeFromCart(productId);
+        renderCartModal();
+      });
+    });
+  }
+
+  async function checkout() {
+    if (cart.length === 0) {
+      alert('El carrito está vacío');
+      return;
+    }
+
+    // Validar stock
+    for (const item of cart) {
+      const product = products.find(p => p.id === item.productId);
+      if (!product || item.cantidad > product.stock) {
+        alert(`${item.name} no tiene suficiente stock (disponible: ${product?.stock || 0})`);
+        return;
+      }
+    }
+
+    try {
+      const total = getCartTotal();
+
+      // Crear transacción
+      const transaccionRes = await apiPost('/transacciones', {
+        usuario_id: currentUser.id,
+        monto_total: total,
+        estado: 'confirmado',
+      });
+
+      const transaccionId = transaccionRes.transaccion.id;
+
+      // Crear detalles de transacción y actualizar stock
+      for (const item of cart) {
+        await apiPost('/detalle-transacciones', {
+          transaccion_id: transaccionId,
+          producto_id: item.productId,
+          cantidad: item.cantidad,
+          subtotal: item.price * item.cantidad,
+        });
+
+        // Actualizar inventario
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
+          const newStock = product.stock - item.cantidad;
+          await apiPut(`/inventario/${item.productId}`, {
+            stock: newStock,
+          });
+          product.stock = newStock;
+        }
+      }
+
+      clearCart();
+      document.getElementById('cartModal').remove();
+      alert('¡Compra confirmada! Revisa tu historial de pedidos.');
+      renderProfile();
+      
+    } catch (err) {
+      console.error('Error en compra:', err);
+      alert('Error al procesar la compra. Intenta de nuevo.');
+    }
+  }
+
+  /* ================ FAVORITOS ============== */
+  async function loadFavoritos() {
+    try {
+      const favoritos = await apiGet(`/favoritos?usuario_id=${currentUser.id}`);
+      state.favorites = favoritos.map(f => f.producto_id);
+    } catch (err) {
+      console.error('Error cargando favoritos:', err);
+      state.favorites = [];
+    }
+  }
+
+  async function toggleFavorito(productId) {
+    try {
+      if (state.favorites.includes(productId)) {
+        // Eliminar de favoritos
+        await fetch(`${API_URL}/favoritos/${productId}?usuario_id=${currentUser.id}`, {
+          method: 'DELETE',
+        });
+        state.favorites = state.favorites.filter(id => id !== productId);
+      } else {
+        // Agregar a favoritos
+        await apiPost(`/favoritos`, {
+          usuario_id: currentUser.id,
+          producto_id: productId,
+        });
+        state.favorites.push(productId);
+      }
+    } catch (err) {
+      console.error('Error actualizando favorito:', err);
+      alert('Error al actualizar favoritos');
+    }
+  }
 
   /* ================ DARK MODE ============== */
   const body = document.body;
