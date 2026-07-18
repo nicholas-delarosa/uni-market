@@ -8,6 +8,7 @@ const productosRouter = require('./routes/productos');
 const authRouter = require('./routes/auth');
 const inventarioRouter = require('./routes/inventario');
 const pedidosRouter = require('./routes/pedidos');
+const favoritosRouter = require('./routes/favoritos');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/productos', productosRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/inventario', inventarioRouter);
 app.use('/api/pedidos', pedidosRouter);
+app.use('/api/favoritos', favoritosRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
