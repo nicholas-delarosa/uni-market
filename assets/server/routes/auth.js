@@ -97,4 +97,104 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// GET /api/auth/me/:usuarioId
+// Valida que el usuario exista y retorna sus datos actuales
+router.get('/me/:usuarioId', async (req, res) => {
+  const { usuarioId } = req.params;
+
+  if (!usuarioId) {
+    return res.status(400).json({ error: 'Usuario ID es obligatorio' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id, nombre, apellido, correo, universidad_id, activo
+       FROM usuarios
+       WHERE id = $1`,
+      [usuarioId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const usuario = result.rows[0];
+
+    if (!usuario.activo) {
+      return res.status(403).json({ error: 'Esta cuenta está desactivada' });
+    }
+
+    // Traer los roles del usuario
+    const rolesResult = await pool.query(
+      `SELECT r.rol
+       FROM usuario_roles ur
+       JOIN roles r ON r.id = ur.rol_id
+       WHERE ur.usuario_id = $1`,
+      [usuario.id]
+    );
+    const roles = rolesResult.rows.map(r => r.rol);
+
+    res.json({
+      usuario: { ...usuario, roles },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener usuario' });
+  }
+});
+
+// PUT /api/auth/universidad/:usuarioId
+// Actualiza la universidad del usuario
+router.put('/universidad/:usuarioId', async (req, res) => {
+  const { usuarioId } = req.params;
+  const { universidad_id } = req.body;
+
+  if (!usuarioId || !universidad_id) {
+    return res.status(400).json({ error: 'Usuario ID y universidad_id son obligatorios' });
+  }
+
+  try {
+    // Verificar que la universidad exista
+    const uniCheck = await pool.query(
+      'SELECT id FROM universidades WHERE id = $1',
+      [universidad_id]
+    );
+    if (uniCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Universidad no encontrada' });
+    }
+
+    // Actualizar la universidad del usuario
+    const result = await pool.query(
+      `UPDATE usuarios 
+       SET universidad_id = $1 
+       WHERE id = $2
+       RETURNING id, nombre, apellido, correo, universidad_id, activo`,
+      [universidad_id, usuarioId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const usuario = result.rows[0];
+
+    // Traer los roles del usuario
+    const rolesResult = await pool.query(
+      `SELECT r.rol
+       FROM usuario_roles ur
+       JOIN roles r ON r.id = ur.rol_id
+       WHERE ur.usuario_id = $1`,
+      [usuario.id]
+    );
+    const roles = rolesResult.rows.map(r => r.rol);
+
+    res.json({
+      usuario: { ...usuario, roles },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar universidad' });
+  }
+});
+
 module.exports = router;
