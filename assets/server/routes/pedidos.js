@@ -5,16 +5,27 @@ const pool = require('../db');
 const ESTADOS_VALIDOS = ['pendiente', 'confirmado', 'entregado', 'cancelado'];
 
 // GET /api/pedidos?emprendimiento_id=1&estado=pendiente
+// GET /api/pedidos?usuario_id=2
 router.get('/', async (req, res) => {
-  const { emprendimiento_id, estado } = req.query;
+  const { emprendimiento_id, usuario_id, estado } = req.query;
 
-  if (!emprendimiento_id) {
-    return res.status(400).json({ error: 'emprendimiento_id es obligatorio' });
+  if (!emprendimiento_id && !usuario_id) {
+    return res.status(400).json({ error: 'emprendimiento_id o usuario_id es obligatorio' });
   }
 
   try {
-    const params = [emprendimiento_id];
-    let where = `WHERE p.emprendimiento_id = $1`;
+    const params = [];
+    let where = `WHERE 1=1`;
+
+    if (emprendimiento_id) {
+      params.push(emprendimiento_id);
+      where += ` AND p.emprendimiento_id = $${params.length}`;
+    }
+
+    if (usuario_id) {
+      params.push(usuario_id);
+      where += ` AND t.usuario_id = $${params.length}`;
+    }
 
     if (estado) {
       params.push(estado);
@@ -125,6 +136,62 @@ router.get('/resumen', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error al obtener el resumen de pedidos' });
+  }
+});
+
+// POST /api/transacciones
+// body: { usuario_id, monto_total, estado }
+router.post('/transacciones', async (req, res) => {
+  const { usuario_id, monto_total, estado = 'pendiente' } = req.body;
+
+  if (!usuario_id || monto_total === undefined) {
+    return res.status(400).json({ error: 'usuario_id y monto_total son obligatorios' });
+  }
+
+  if (!ESTADOS_VALIDOS.includes(estado)) {
+    return res.status(400).json({ error: `Estado inválido. Debe ser uno de: ${ESTADOS_VALIDOS.join(', ')}` });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO transacciones (usuario_id, monto_total, estado, fecha)
+       VALUES ($1, $2, $3, NOW())
+       RETURNING id, usuario_id, monto_total, estado, fecha`,
+      [usuario_id, monto_total, estado]
+    );
+
+    res.status(201).json({
+      transaccion: result.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear la transacción' });
+  }
+});
+
+// POST /api/detalle-transacciones
+// body: { transaccion_id, producto_id, cantidad, subtotal }
+router.post('/detalle-transacciones', async (req, res) => {
+  const { transaccion_id, producto_id, cantidad, subtotal } = req.body;
+
+  if (!transaccion_id || !producto_id || !cantidad || subtotal === undefined) {
+    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO detalle_transacciones (transaccion_id, producto_id, cantidad, subtotal)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, transaccion_id, producto_id, cantidad, subtotal`,
+      [transaccion_id, producto_id, cantidad, subtotal]
+    );
+
+    res.status(201).json({
+      detalle: result.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear el detalle de transacción' });
   }
 });
 
