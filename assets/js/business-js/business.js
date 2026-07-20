@@ -269,6 +269,8 @@ async function cargarMiTienda() {
     // 2. reflejar el nombre real en el sidebar y el saludo del dashboard
     const storeNameEl = document.querySelector('.store-name');
     if (storeNameEl) storeNameEl.textContent = miEmprendimiento.name;
+    const storeSubEl = document.querySelector('.store-sub');
+    if (storeSubEl) storeSubEl.textContent = miEmprendimiento.universidad || '';
 
     const chipNameEl = document.querySelector('.user-chip-name');
     if (chipNameEl) chipNameEl.textContent = `${usuarioGuardado.nombre} ${usuarioGuardado.apellido.charAt(0)}.`;
@@ -280,12 +282,19 @@ async function cargarMiTienda() {
     document.getElementById('page-title').textContent = pageMeta.dashboard.title;
     document.getElementById('page-subtitle').textContent = pageMeta.dashboard.subtitle;
 
+    // el switch de abierta/cerrada refleja el valor real guardado, no siempre "true"
+    tiendaAbierta = miEmprendimiento.abierto;
+    pintarEstadoTienda();
+
+    // el formulario de "Mi tienda" se llena con los datos reales
+    cargarFormularioTienda();
+
     // 3. traer y pintar los productos reales
     misProductos = await apiGet(`/productos?emprendimiento_id=${miEmprendimiento.id}`);
     renderTodo();
 
-    // 4. pedidos: tabla completa + resumen del dashboard
-    await Promise.all([cargarPedidos(), cargarResumenDashboard()]);
+    // 4. pedidos: tabla completa + resumen del dashboard + estadísticas
+    await Promise.all([cargarPedidos(), cargarResumenDashboard(), cargarEstadisticas()]);
   } catch (err) {
     console.error(err);
   }
@@ -293,6 +302,103 @@ async function cargarMiTienda() {
 
 if (usuarioGuardado) {
   cargarMiTienda();
+}
+
+/* ---------- Mi tienda: formulario ---------- */
+function cargarFormularioTienda() {
+  document.getElementById('tienda-nombre').value = miEmprendimiento.name || '';
+  document.getElementById('tienda-categoria').value = miEmprendimiento.categoria || 'Comida';
+  document.getElementById('tienda-universidad').value = miEmprendimiento.universidad || '';
+  document.getElementById('tienda-whatsapp').value = miEmprendimiento.whatsapp || '';
+  document.getElementById('tienda-hora-apertura').value = (miEmprendimiento.horaApertura || '08:00:00').slice(0, 5);
+  document.getElementById('tienda-hora-cierre').value = (miEmprendimiento.horaCierre || '18:00:00').slice(0, 5);
+  document.getElementById('tienda-descripcion').value = miEmprendimiento.descripcion || '';
+}
+
+const btnTiendaGuardar = document.getElementById('tienda-guardar');
+if (btnTiendaGuardar) {
+  btnTiendaGuardar.addEventListener('click', async () => {
+    const nombre = document.getElementById('tienda-nombre').value.trim();
+    if (!nombre) {
+      alert('El nombre del emprendimiento no puede quedar vacío.');
+      return;
+    }
+
+    const payload = {
+      nombre,
+      categoria: document.getElementById('tienda-categoria').value,
+      descripcion: document.getElementById('tienda-descripcion').value.trim(),
+      whatsapp: document.getElementById('tienda-whatsapp').value.trim(),
+      horaApertura: document.getElementById('tienda-hora-apertura').value,
+      horaCierre: document.getElementById('tienda-hora-cierre').value,
+    };
+
+    const originalText = btnTiendaGuardar.textContent;
+    btnTiendaGuardar.textContent = 'Guardando...';
+    btnTiendaGuardar.disabled = true;
+
+    try {
+      await apiSend('PUT', `/emprendimientos/${miEmprendimiento.id}`, payload);
+      // vuelve a traer el emprendimiento actualizado para que todo (sidebar, saludo) quede sincronizado
+      const emprendimientos = await apiGet(`/emprendimientos?usuario_id=${usuarioGuardado.id}`);
+      miEmprendimiento = emprendimientos[0];
+      document.querySelector('.store-name').textContent = miEmprendimiento.name;
+      pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
+      alert('Los cambios se guardaron correctamente.');
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'No se pudieron guardar los cambios');
+    } finally {
+      btnTiendaGuardar.textContent = originalText;
+      btnTiendaGuardar.disabled = false;
+    }
+  });
+}
+
+const btnTiendaCancelar = document.getElementById('tienda-cancelar');
+if (btnTiendaCancelar) {
+  btnTiendaCancelar.addEventListener('click', () => {
+    if (miEmprendimiento) cargarFormularioTienda();
+  });
+}
+
+/* ---------- Estadísticas ---------- */
+async function cargarEstadisticas() {
+  if (!miEmprendimiento) return;
+  const stats = await apiGet(`/pedidos/estadisticas?emprendimiento_id=${miEmprendimiento.id}`);
+
+  // barras de ventas de la semana
+  const maxVenta = Math.max(...stats.ventasSemana.map(d => d.total), 1);
+  stats.ventasSemana.forEach(dia => {
+    const col = document.querySelector(`#bars-ventas-semana [data-dow="${dia.dow}"] .bar`);
+    if (col) col.style.height = `${Math.round((dia.total / maxVenta) * 100)}%`;
+  });
+
+  // ranking de productos más vendidos
+  const rankWrap = document.getElementById('rank-productos-top');
+  if (rankWrap) {
+    if (!stats.productosTop.length) {
+      rankWrap.innerHTML = `<p class="empty-hint">Todavía no hay ventas este mes.</p>`;
+    } else {
+      const maxVendidos = stats.productosTop[0].vendidos || 1;
+      rankWrap.innerHTML = stats.productosTop.map((p, i) => `
+        <div class="rank-row">
+          <span class="rank-num">${i + 1}</span>
+          <div class="rank-info">
+            <div class="rank-name">${p.nombre}</div>
+            <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${Math.round((p.vendidos / maxVendidos) * 100)}%;"></div></div>
+          </div>
+          <span class="rank-count">${p.vendidos}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  // resumen de pedidos del mes
+  document.getElementById('resumen-completados').textContent = stats.resumenPedidos.completados;
+  document.getElementById('resumen-pendientes').textContent = stats.resumenPedidos.pendientes;
+  document.getElementById('resumen-cancelados').textContent = stats.resumenPedidos.cancelados;
+  document.getElementById('resumen-total-mes').textContent = formatPrecio(stats.resumenPedidos.totalMes);
 }
 
 /* ---------- navegación entre secciones ---------- */
@@ -355,8 +461,17 @@ function pintarEstadoTienda() {
 function toggleTienda() {
   tiendaAbierta = !tiendaAbierta;
   pintarEstadoTienda();
-  //aquí va la llamada real para persistir el cambio.
-  // ejemplo : fetch(`/api/emprendimientos/${id}`, { method:'PATCH', body: JSON.stringify({ abierto: tiendaAbierta }) })
+
+  if (miEmprendimiento) {
+    apiSend('PATCH', `/emprendimientos/${miEmprendimiento.id}`, { abierto: tiendaAbierta })
+      .catch(err => {
+        console.error(err);
+        // si falla, revierte visualmente para no mentirle al usuario
+        tiendaAbierta = !tiendaAbierta;
+        pintarEstadoTienda();
+        alert('No se pudo actualizar el estado de la tienda');
+      });
+  }
 }
 document.getElementById('status-switch').addEventListener('click', toggleTienda);
 document.getElementById('status-switch-2').addEventListener('click', toggleTienda);
@@ -547,6 +662,26 @@ document.addEventListener('click', async (e) => {
     alert(err.message || 'No se pudo actualizar el inventario');
   }
 });
+
+/* ---------- volver al marketplace / cerrar sesión ---------- */
+const btnVolverMarketplace = document.getElementById('btn-volver-marketplace');
+if (btnVolverMarketplace) {
+  btnVolverMarketplace.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = 'app.html';
+  });
+}
+
+const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
+if (btnCerrarSesion) {
+  btnCerrarSesion.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (confirm('¿Seguro que quieres cerrar sesión?')) {
+      localStorage.removeItem('um_usuario');
+      window.location.href = 'login.html';
+    }
+  });
+}
 
 /* ---------- modo oscuro ---------- */
 // Mismo patrón que ya usa el catálogo (app.js): clase .dark-mode en el

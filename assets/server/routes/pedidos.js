@@ -5,6 +5,7 @@ const pool = require('../db');
 const ESTADOS_VALIDOS = ['pendiente', 'confirmado', 'entregado', 'cancelado'];
 
 // GET /api/pedidos?emprendimiento_id=1&estado=pendiente
+// Cada emprendedor solo ve, de cada pedido, SUS propias líneas de producto
 router.get('/', async (req, res) => {
   const { emprendimiento_id, estado } = req.query;
 
@@ -47,7 +48,6 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/pedidos/resumen?emprendimiento_id=1
-// Todo lo que necesita el dashboard en una sola llamada.
 router.get('/resumen', async (req, res) => {
   const { emprendimiento_id } = req.query;
 
@@ -125,6 +125,90 @@ router.get('/resumen', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error al obtener el resumen de pedidos' });
+  }
+});
+
+// GET /api/pedidos/estadisticas?emprendimiento_id=1
+router.get('/estadisticas', async (req, res) => {
+  const { emprendimiento_id } = req.query;
+
+  if (!emprendimiento_id) {
+    return res.status(400).json({ error: 'emprendimiento_id es obligatorio' });
+  }
+
+  try {
+    // ventas por día de ESTA semana (1=lunes ... 7=domingo)
+    const ventasSemana = await pool.query(
+      `SELECT EXTRACT(ISODOW FROM t.fecha)::int AS dow, COALESCE(SUM(dt.subtotal), 0) AS total
+       FROM transacciones t
+       JOIN detalle_transacciones dt ON dt.transaccion_id = t.id
+       JOIN productos p ON p.id = dt.producto_id
+       WHERE p.emprendimiento_id = $1
+         AND t.estado != 'cancelado'
+         AND t.fecha >= date_trunc('week', CURRENT_DATE)
+         AND t.fecha < date_trunc('week', CURRENT_DATE) + INTERVAL '7 days'
+       GROUP BY dow`,
+      [emprendimiento_id]
+    );
+
+    // top 3 productos más vendidos del mes
+    const topProductos = await pool.query(
+      `SELECT p.nombre, SUM(dt.cantidad)::int AS vendidos
+       FROM detalle_transacciones dt
+       JOIN productos p ON p.id = dt.producto_id
+       JOIN transacciones t ON t.id = dt.transaccion_id
+       WHERE p.emprendimiento_id = $1
+         AND t.estado != 'cancelado'
+         AND date_trunc('month', t.fecha) = date_trunc('month', CURRENT_DATE)
+       GROUP BY p.nombre
+       ORDER BY vendidos DESC
+       LIMIT 3`,
+      [emprendimiento_id]
+    );
+
+    // resumen de pedidos del mes: completados = entregado, pendientes = pendiente + confirmado
+    const resumenPedidos = await pool.query(
+      `SELECT
+         COUNT(DISTINCT t.id) FILTER (WHERE t.estado = 'entregado')::int AS completados,
+         COUNT(DISTINCT t.id) FILTER (WHERE t.estado IN ('pendiente', 'confirmado'))::int AS pendientes,
+         COUNT(DISTINCT t.id) FILTER (WHERE t.estado = 'cancelado')::int AS cancelados
+       FROM transacciones t
+       JOIN detalle_transacciones dt ON dt.transaccion_id = t.id
+       JOIN productos p ON p.id = dt.producto_id
+       WHERE p.emprendimiento_id = $1
+         AND date_trunc('month', t.fecha) = date_trunc('month', CURRENT_DATE)`,
+      [emprendimiento_id]
+    );
+
+    const totalMes = await pool.query(
+      `SELECT COALESCE(SUM(dt.subtotal), 0) AS total
+       FROM transacciones t
+       JOIN detalle_transacciones dt ON dt.transaccion_id = t.id
+       JOIN productos p ON p.id = dt.producto_id
+       WHERE p.emprendimiento_id = $1
+         AND t.estado != 'cancelado'
+         AND date_trunc('month', t.fecha) = date_trunc('month', CURRENT_DATE)`,
+      [emprendimiento_id]
+    );
+
+    // arma los 7 días completos (Lun-Dom), con 0 en los días sin ventas
+    const porDia = {};
+    ventasSemana.rows.forEach(r => { porDia[r.dow] = Number(r.total); });
+    const dias = [1, 2, 3, 4, 5, 6, 7].map(dow => ({ dow, total: porDia[dow] || 0 }));
+
+    res.json({
+      ventasSemana: dias,
+      productosTop: topProductos.rows,
+      resumenPedidos: {
+        completados: resumenPedidos.rows[0].completados,
+        pendientes: resumenPedidos.rows[0].pendientes,
+        cancelados: resumenPedidos.rows[0].cancelados,
+        totalMes: Number(totalMes.rows[0].total),
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener las estadísticas' });
   }
 });
 
