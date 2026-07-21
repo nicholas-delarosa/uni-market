@@ -41,6 +41,10 @@
   /* ================= AUTENTICACIÓN ================= */
   let currentUser = null;
 
+  function isEntrepreneurRole(roles = []) {
+    return roles.some(r => ['vendedor', 'emprendedor'].includes(String(r).toLowerCase()));
+  }
+
   function isAuthenticated() {
     return Boolean(currentUser && currentUser.id);
   }
@@ -267,6 +271,11 @@
 
   document.querySelectorAll('.side-link, .mobile-tabbar a, .topbar-user').forEach(el => {
     el.addEventListener('click', (e) => {
+      if (el.dataset.route) {
+        e.preventDefault();
+        window.location.href = el.dataset.route;
+        return;
+      }
       e.preventDefault();
       setView(el.dataset.view);
     });
@@ -801,10 +810,12 @@
     const topbarUserName = document.querySelector('.topbar-user-name');
     const topbarUserRole = document.querySelector('.topbar-user-role');
     const avatarSm = document.querySelector('.avatar-sm');
+    const sellerPanelLink = document.getElementById('sidebarSellerPanelLink');
     const logoutButton = document.getElementById('sidebarLogout');
     const logoutLabel = logoutButton ? logoutButton.childNodes[logoutButton.childNodes.length - 1] : null;
 
     if (!currentUser) {
+      if (sellerPanelLink) sellerPanelLink.style.display = 'none';
       if (topbarUserName) topbarUserName.textContent = 'Invitado';
       if (topbarUserRole) topbarUserRole.textContent = 'Exploración pública';
       if (avatarSm) avatarSm.textContent = 'I';
@@ -815,6 +826,10 @@
         logoutLabel.textContent = ' Iniciar sesión';
       }
       return;
+    }
+
+    if (sellerPanelLink) {
+      sellerPanelLink.style.display = isEntrepreneurRole(currentUser.roles || []) ? '' : 'none';
     }
     
     if (topbarUserName) {
