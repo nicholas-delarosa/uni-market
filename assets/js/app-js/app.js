@@ -214,7 +214,7 @@
       // trae los emprendimientos y productos de ESA universidad desde la API
       [sellers, products] = await Promise.all([
         apiGet(`/emprendimientos?universidad_id=${uni.id}`),
-        apiGet(`/productos?universidad_id=${uni.id}`),
+        apiGet(`/productos?universidad_id=${uni.id}&disponible=true`),
       ]);
 
       if (isAuthenticated()) {
@@ -766,7 +766,7 @@
         // Cargar datos de la universidad
         [sellers, products] = await Promise.all([
           apiGet(`/emprendimientos?universidad_id=${userUni.id}`),
-          apiGet(`/productos?universidad_id=${userUni.id}`),
+          apiGet(`/productos?universidad_id=${userUni.id}&disponible=true`),
         ]);
 
         await loadFavoritos();
@@ -788,7 +788,7 @@
         state.university = defaultUni;
         [sellers, products] = await Promise.all([
           apiGet(`/emprendimientos?universidad_id=${defaultUni.id}`),
-          apiGet(`/productos?universidad_id=${defaultUni.id}`),
+          apiGet(`/productos?universidad_id=${defaultUni.id}&disponible=true`),
         ]);
 
         state.favorites = loadGuestFavorites();
@@ -1124,6 +1124,15 @@
       clearCart();
       const modal = document.getElementById('cartModal'); if (modal) modal.remove();
       alert('¡Compra confirmada! Revisa tu historial de pedidos.');
+
+      // el stock que se acaba de gastar cambia lo que debería verse en el
+      // catálogo (ej: un producto que quedó en 0 ya no debe aparecer) —
+      // sin esto, seguiría viéndose la foto de productos de cuando cargó la página
+      if (state.university) {
+        products = await apiGet(`/productos?universidad_id=${state.university.id}&disponible=true`);
+        renderCatalogGrid();
+      }
+
       renderProfile();
     } catch (err) {
       console.error('Error en compra:', err);
