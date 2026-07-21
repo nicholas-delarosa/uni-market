@@ -3,6 +3,10 @@ const router = express.Router();
 const pool = require('../db');
 
 const VALID_REGISTER_ROLES = ['comprador', 'emprendedor'];
+const ROLE_DB_MAP = {
+  comprador: 'estudiante',
+  emprendedor: 'vendedor',
+};
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -16,6 +20,11 @@ function isStrongPassword(value) {
   return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(value || ''));
 }
 
+function normalizeRoleForDb(role) {
+  const normalized = String(role || '').toLowerCase().trim();
+  return ROLE_DB_MAP[normalized] || normalized;
+}
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { correo, contrasena } = req.body;
@@ -27,7 +36,7 @@ router.post('/login', async (req, res) => {
   try {
     // 1. Buscar el usuario por correo
     const result = await pool.query(
-      `SELECT id, nombre, apellido, correo, telefono, contrasena, universidad_id, activo
+      `SELECT id, nombre, apellido, correo, celular AS telefono, contrasena, universidad_id, activo
        FROM usuarios
        WHERE correo = $1`,
       [correo]
@@ -119,10 +128,18 @@ router.post('/register', async (req, res) => {
       return res.status(404).json({ error: 'La universidad seleccionada no existe' });
     }
 
-    const roleResult = await client.query(
+    const dbRole = normalizeRoleForDb(rol);
+    let roleResult = await client.query(
       `SELECT id, rol FROM roles WHERE LOWER(rol) = LOWER($1) LIMIT 1`,
-      [rol]
+      [dbRole]
     );
+
+    if (roleResult.rows.length === 0 && dbRole !== String(rol).toLowerCase().trim()) {
+      roleResult = await client.query(
+        `SELECT id, rol FROM roles WHERE LOWER(rol) = LOWER($1) LIMIT 1`,
+        [String(rol).toLowerCase().trim()]
+      );
+    }
 
     if (roleResult.rows.length === 0) {
       await client.query('ROLLBACK');
@@ -131,9 +148,9 @@ router.post('/register', async (req, res) => {
 
     // 2. Crear el usuario
     const result = await client.query(
-      `INSERT INTO usuarios (nombre, apellido, correo, contrasena, telefono, universidad_id, activo)
+      `INSERT INTO usuarios (nombre, apellido, correo, contrasena, celular, universidad_id, activo)
        VALUES ($1, $2, $3, $4, $5, $6, true)
-       RETURNING id, nombre, apellido, correo, telefono, universidad_id, activo`,
+       RETURNING id, nombre, apellido, correo, celular AS telefono, universidad_id, activo`,
       [nombre, apellido, correo, contrasena, telefono, universidad_id]
     );
 
@@ -170,7 +187,7 @@ router.get('/me/:usuarioId', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, nombre, apellido, correo, telefono, universidad_id, activo
+      `SELECT id, nombre, apellido, correo, celular AS telefono, universidad_id, activo
        FROM usuarios
        WHERE id = $1`,
       [usuarioId]
@@ -230,7 +247,7 @@ router.put('/universidad/:usuarioId', async (req, res) => {
       `UPDATE usuarios 
        SET universidad_id = $1 
        WHERE id = $2
-       RETURNING id, nombre, apellido, correo, telefono, universidad_id, activo`,
+       RETURNING id, nombre, apellido, correo, celular AS telefono, universidad_id, activo`,
       [universidad_id, usuarioId]
     );
 

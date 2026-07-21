@@ -1,5 +1,5 @@
 ALTER TABLE usuarios
-ADD COLUMN IF NOT EXISTS telefono VARCHAR(20);
+ADD COLUMN IF NOT EXISTS celular VARCHAR(20);
 
 INSERT INTO roles (rol)
 SELECT 'comprador'

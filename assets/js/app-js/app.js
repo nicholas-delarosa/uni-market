@@ -419,7 +419,8 @@
     }).join('');
 
     grid.querySelectorAll('[data-fav]').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', async (event) => {
+        event.stopPropagation();
         const id = parseInt(btn.dataset.fav);
         await toggleFavorito(id);
         renderCatalogGrid();
@@ -527,7 +528,8 @@
 
     // Listeners
     grid.querySelectorAll('[data-fav]').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', async (event) => {
+        event.stopPropagation();
         const id = Number(btn.dataset.fav);
         await toggleFavorito(id);
         renderFavorites();
