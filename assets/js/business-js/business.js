@@ -1,10 +1,18 @@
 const API_URL = 'http://localhost:3000/api';
 
-// esta vista es solo para emprendedores logueados: si no hay usuario
-// guardado por el login, no tiene sentido mostrarla
+// esta vista es solo para emprendedores: necesita sesión iniciada Y
+// que el usuario tenga el rol "vendedor" (se lo asignamos solo cuando
+// verifica su correo institucional). Un estudiante normal logueado
+// no puede entrar aquí solo por tener sesión.
 const usuarioGuardado = JSON.parse(localStorage.getItem('um_usuario') || 'null');
+const esVendedor = !!(usuarioGuardado && Array.isArray(usuarioGuardado.roles) && usuarioGuardado.roles.includes('vendedor'));
+
 if (!usuarioGuardado) {
   window.location.href = 'login.html';
+} else if (!esVendedor) {
+  // sí inició sesión, pero no es emprendedor: lo mandamos al marketplace, no al login
+  alert('Esta sección es solo para emprendedores con correo institucional verificado.');
+  window.location.href = 'app.html';
 }
 
 let miEmprendimiento = null;
@@ -300,7 +308,7 @@ async function cargarMiTienda() {
   }
 }
 
-if (usuarioGuardado) {
+if (esVendedor) {
   cargarMiTienda();
 }
 
@@ -418,6 +426,14 @@ function switchView(view) {
   document.getElementById('view-' + view).classList.add('active');
   document.getElementById('page-title').textContent = pageMeta[view].title;
   document.getElementById('page-subtitle').textContent = pageMeta[view].subtitle;
+
+  // trae datos frescos cada vez que entras a una sección, en vez de
+  // quedarte con lo que había cuando cargó la página por primera vez
+  if (!miEmprendimiento) return;
+  if (view === 'dashboard') cargarResumenDashboard();
+  if (view === 'productos' || view === 'inventario') recargarProductos();
+  if (view === 'pedidos') cargarPedidos();
+  if (view === 'estadisticas') cargarEstadisticas();
 }
 
 // Un solo listener delegado para cualquier elemento con data-view: los
