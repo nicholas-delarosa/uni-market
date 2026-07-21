@@ -18,9 +18,9 @@ async function getOrCreateCategoriaId(tipo) {
   return creada.rows[0].id;
 }
 
-// GET /api/productos?universidad_id=1&emprendimiento_id=3
+// GET /api/productos?universidad_id=1&emprendimiento_id=3&disponible=true
 router.get('/', async (req, res) => {
-  const { universidad_id, emprendimiento_id } = req.query;
+  const { universidad_id, emprendimiento_id, disponible } = req.query;
 
   try {
     const params = [];
@@ -33,6 +33,13 @@ router.get('/', async (req, res) => {
     if (emprendimiento_id) {
       params.push(emprendimiento_id);
       where += ` AND e.id = $${params.length}`;
+    }
+    // "disponible=true" es opcional a propósito: el catálogo de compra lo usa
+    // para no mostrar productos agotados, pero el panel del emprendedor
+    // NO lo manda, porque ahí sí necesita ver sus productos con stock 0
+    // (para saber que debe reponerlos).
+    if (disponible === 'true') {
+      where += ` AND COALESCE(i.stock_actual, 0) > 0`;
     }
 
     const query = `
