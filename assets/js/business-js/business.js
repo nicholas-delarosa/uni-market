@@ -4,15 +4,10 @@ const API_URL = 'http://localhost:3000/api';
 // que el usuario tenga el rol "vendedor" (se lo asignamos solo cuando
 // verifica su correo institucional). Un estudiante normal logueado
 // no puede entrar aquí solo por tener sesión.
-const usuarioGuardado = JSON.parse(localStorage.getItem('um_usuario') || 'null');
-const esVendedor = !!(usuarioGuardado && Array.isArray(usuarioGuardado.roles) && usuarioGuardado.roles.includes('vendedor'));
+let usuarioGuardado = JSON.parse(localStorage.getItem('um_usuario') || 'null');
 
-if (!usuarioGuardado) {
-  window.location.href = 'login.html';
-} else if (!esVendedor) {
-  // sí inició sesión, pero no es emprendedor: lo mandamos al marketplace, no al login
-  alert('Esta sección es solo para emprendedores con correo institucional verificado.');
-  window.location.href = 'app.html';
+function isVendedorRole(roles = []) {
+  return roles.some(r => ['vendedor', 'emprendedor'].includes(String(r).toLowerCase()));
 }
 
 let miEmprendimiento = null;
@@ -33,6 +28,58 @@ async function apiSend(method, path, body) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `Error al llamar ${path}`);
   return data;
+}
+
+async function validateAndLoadUser() {
+  if (!usuarioGuardado || !usuarioGuardado.id) {
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/auth/me/${usuarioGuardado.id}`);
+    if (!res.ok) {
+      localStorage.removeItem('um_usuario');
+      return null;
+    }
+
+    const data = await res.json();
+    usuarioGuardado = data.usuario;
+    localStorage.setItem('um_usuario', JSON.stringify(usuarioGuardado));
+    return usuarioGuardado;
+  } catch (err) {
+    console.error('Error validando sesión en panel emprendedor:', err);
+    return null;
+  }
+}
+
+function getDisplayName(user) {
+  const nombre = String(user?.nombre || '').trim();
+  const apellido = String(user?.apellido || '').trim();
+  return `${nombre} ${apellido}`.trim() || 'Usuario';
+}
+
+function getInitials(user) {
+  const n = String(user?.nombre || '').trim().charAt(0);
+  const a = String(user?.apellido || '').trim().charAt(0);
+  const initials = `${n}${a}`.toUpperCase();
+  return initials || 'U';
+}
+
+function renderAuthenticatedUserInfo(user) {
+  const chipNameEl = document.querySelector('.user-chip-name');
+  if (chipNameEl) chipNameEl.textContent = getDisplayName(user);
+
+  const chipRoleEl = document.querySelector('.user-chip-role');
+  if (chipRoleEl) {
+    const role = (user.roles && user.roles[0]) ? user.roles[0] : 'usuario';
+    chipRoleEl.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+  }
+
+  const chipAvatarEl = document.querySelector('.user-chip .avatar');
+  if (chipAvatarEl) chipAvatarEl.textContent = getInitials(user);
+
+  pageMeta.dashboard.title = `Hola, ${String(user?.nombre || '').trim() || 'Usuario'} 👋`;
+  document.getElementById('page-title').textContent = pageMeta.dashboard.title;
 }
 
 async function recargarProductos() {
@@ -265,6 +312,8 @@ async function cargarResumenDashboard() {
 
 async function cargarMiTienda() {
   try {
+    renderAuthenticatedUserInfo(usuarioGuardado);
+
     // 1. encontrar el emprendimiento del usuario logueado
     const emprendimientos = await apiGet(`/emprendimientos?usuario_id=${usuarioGuardado.id}`);
     miEmprendimiento = emprendimientos[0];
@@ -279,11 +328,6 @@ async function cargarMiTienda() {
     if (storeNameEl) storeNameEl.textContent = miEmprendimiento.name;
     const storeSubEl = document.querySelector('.store-sub');
     if (storeSubEl) storeSubEl.textContent = miEmprendimiento.universidad || '';
-
-    const chipNameEl = document.querySelector('.user-chip-name');
-    if (chipNameEl) chipNameEl.textContent = `${usuarioGuardado.nombre} ${usuarioGuardado.apellido.charAt(0)}.`;
-    const chipAvatarEl = document.querySelector('.user-chip .avatar');
-    if (chipAvatarEl) chipAvatarEl.textContent = (usuarioGuardado.nombre[0] + usuarioGuardado.apellido[0]).toUpperCase();
 
     pageMeta.dashboard.title = `Hola, ${usuarioGuardado.nombre} 👋`;
     pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
@@ -308,9 +352,23 @@ async function cargarMiTienda() {
   }
 }
 
-if (esVendedor) {
+(async () => {
+  const user = await validateAndLoadUser();
+
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  if (!isVendedorRole(user.roles || [])) {
+    alert('Esta sección es solo para emprendedores con correo institucional verificado.');
+    window.location.href = 'app.html';
+    return;
+  }
+
+  renderAuthenticatedUserInfo(user);
   cargarMiTienda();
-}
+})();
 
 /* ---------- Mi tienda: formulario ---------- */
 function cargarFormularioTienda() {
@@ -411,7 +469,7 @@ async function cargarEstadisticas() {
 
 /* ---------- navegación entre secciones ---------- */
 const pageMeta = {
-  dashboard:      { title: 'Hola, Camila 👋', subtitle: 'Esto es lo que pasa hoy en Postres Camila.' },
+  dashboard:      { title: 'Hola 👋', subtitle: 'Esto es lo que pasa hoy en tu tienda.' },
   emprendimiento: { title: 'Mi tienda', subtitle: 'Edita la información pública de tu emprendimiento.' },
   productos:      { title: 'Productos', subtitle: 'Administra lo que ofreces en tu tienda.' },
   inventario:     { title: 'Inventario', subtitle: 'Controla las existencias de cada producto.' },
