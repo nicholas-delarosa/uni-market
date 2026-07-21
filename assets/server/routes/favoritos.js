@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN categorias_producto cp ON cp.id = p.categoria_producto_id
       LEFT JOIN emprendimientos e ON e.id = p.emprendimiento_id
       WHERE f.usuario_id = $1
-      ORDER BY f.creado_en DESC`,
+      ORDER BY f.id DESC`,
       [usuario_id]
     );
 
@@ -68,8 +68,8 @@ router.post('/', async (req, res) => {
 
     // Agregar a favoritos
     const result = await pool.query(
-      `INSERT INTO favoritos (usuario_id, producto_id, creado_en)
-       VALUES ($1, $2, NOW())
+      `INSERT INTO favoritos (usuario_id, producto_id)
+       VALUES ($1, $2)
        RETURNING id, usuario_id, producto_id`,
       [usuario_id, producto_id]
     );
