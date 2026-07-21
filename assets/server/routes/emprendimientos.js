@@ -43,10 +43,10 @@ router.get('/', async (req, res) => {
         uni.nombre_universidad AS universidad,
         e.categoria_emprendimiento_id AS "categoriaId",
         ce.tipo_emprendimiento AS categoria,
-        e.whatsapp_contacto AS whatsapp,
-        e.hora_apertura AS "horaApertura",
-        e.hora_cierre AS "horaCierre",
-        e.abierto,
+        NULL::text AS whatsapp,
+        NULL::text AS "horaApertura",
+        NULL::text AS "horaCierre",
+        e.activo AS abierto,
         COUNT(DISTINCT p.id)::int AS products,
         COALESCE(ROUND(AVG(r.puntuacion)::numeric, 1), 0) AS rating,
         COALESCE(
@@ -88,13 +88,10 @@ router.put('/:id', async (req, res) => {
       `UPDATE emprendimientos
        SET nombre_emprendimiento = $1,
            categoria_emprendimiento_id = $2,
-           descripcion = $3,
-           whatsapp_contacto = $4,
-           hora_apertura = $5,
-           hora_cierre = $6
-       WHERE id = $7
+           descripcion = $3
+       WHERE id = $4
        RETURNING id`,
-      [nombre, categoriaId, descripcion || null, whatsapp || null, horaApertura || null, horaCierre || null, id]
+      [nombre, categoriaId, descripcion || null, id]
     );
 
     if (result.rows.length === 0) {
@@ -119,7 +116,7 @@ router.patch('/:id', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'UPDATE emprendimientos SET abierto = $1 WHERE id = $2 RETURNING id',
+      'UPDATE emprendimientos SET activo = $1 WHERE id = $2 RETURNING id',
       [abierto, id]
     );
 
