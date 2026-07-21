@@ -8,7 +8,6 @@
     <meta name="description"
         content="Unimarket conecta a estudiantes emprendedores con su comunidad universitaria: descubre, compra y haz crecer negocios nacidos dentro del campus.">
     <script>
-        /* Esto va inline y antes de cargar el CSS a propósito: así el tema correcto queda puesto en el <html> antes del primer render y evitamos el parpadeo de "arranca claro y luego salta a oscuro". */
         (function () {
             var saved = localStorage.getItem('unimarket-theme');
             var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -33,11 +32,10 @@
                     <a href="#por-que">Por qué Unimarket</a>
                     <a href="#servicios">Servicios</a>
                     <a href="#universidades">Universidades</a>
-                    <a href="#faq">FAQ</a>
                 </div>
                 <div class="nav-actions">
-                    <a href="#" class="nav-login">Iniciar Sesión</a>
-                    <a href="#" class="btn btn-primary btn-sm">Explorar MarketPlace</a>
+                    <a href="login.html" class="nav-login">Iniciar Sesión</a>
+                    <a href="app.html" class="btn btn-primary btn-sm">Explorar MarketPlace</a>
                     <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema"
                         aria-pressed="false">
                         <svg class="theme-toggle-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -65,8 +63,8 @@
                     <h1>Compra, vende y apoya el emprendimiento universitario desde un solo lugar.</h1>
                     <p class="hero-sub">UNI-MARKET conecta estudiantes compradores con estudiantes emprendedores de universidades aliadas. Descubre productos, encuentra negocios de tu campus y apoya el talento universitario.</p>
                     <div class="hero-cta">
-                        <a href="#servicios" class="btn btn-primary">Explorar productos</a>
-                        <a href="#servicios" class="btn btn-outline">Quiero emprender</a>
+                        <a href="app.html" class="btn btn-primary">Explorar productos</a>
+                        <a href="login.html?mode=register" class="btn btn-outline">Quiero emprender</a>
                     </div>
                     <div class="hero-stats">
                         <div class="hero-stat"><b>+5</b><span>Universidades aliadas</span></div>
@@ -198,7 +196,7 @@
                         <div class="benefit-item"><span class="benefit-check check-orange">✓</span>Gestiona pedidos.</div>
                         <div class="benefit-item"><span class="benefit-check check-orange">✓</span>Lleva el control de tu emprendimiento.</div>
                     </div>
-                    <a href="#" class="btn btn-primary">Crear mi emprendimiento</a>
+                    <a href="login.html?mode=register" class="btn btn-primary">Crear mi emprendimiento</a>
                 </div>
                 <div class="service-visual visual-emprendedores"></div>
             </div>
@@ -214,7 +212,7 @@
                         <div class="benefit-item"><span class="benefit-check check-violet">✓</span>Agrega productos al carrito.</div>
                         <div class="benefit-item"><span class="benefit-check check-violet">✓</span>Compra fácilmente.</div>
                     </div>
-                    <a href="#" class="btn btn-primary">Explorar productos</a>
+                    <a href="app.html" class="btn btn-primary">Explorar productos</a>
                 </div>
                 <div class="service-visual visual-estudiantes"></div>
             </div>

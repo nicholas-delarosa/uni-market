@@ -45,7 +45,7 @@
                 <form class="container-form sign-in active" novalidate>
                     <div class="form-head">
                         <h2>Iniciar sesión</h2>
-                        <span>Usa tu correo y contraseña institucional</span>
+                        <span>Usa tu correo personal y tu contraseña</span>
                     </div>
 
                     <label class="container-input" for="signin-email">
@@ -71,23 +71,61 @@
                 <form class="container-form sign-up" novalidate>
                     <div class="form-head">
                         <h2>Crear cuenta</h2>
-                        <span>Regístrate con tu correo institucional</span>
+                        <span>Completa tus datos para unirte a Unimarket</span>
                     </div>
 
                     <label class="container-input" for="signup-name">
                         <img class="svg" src="assets/src/svg/person.svg" alt="">
-                        <input type="text" name="name" id="signup-name" placeholder="Nombre completo" required>
+                        <input type="text" name="name" id="signup-name" placeholder="Nombre" required>
+                    </label>
+
+                    <label class="container-input" for="signup-lastname">
+                        <img class="svg" src="assets/src/svg/person.svg" alt="">
+                        <input type="text" name="lastname" id="signup-lastname" placeholder="Apellidos" required>
                     </label>
 
                     <label class="container-input" for="signup-email">
                         <img class="svg" src="assets/src/svg/mail.svg" alt="">
-                        <input type="email" name="email" id="signup-email" placeholder="jesus.noguera@riwi.io" required>
+                        <input type="email" name="email" id="signup-email" placeholder="correo.personal@ejemplo.com" required>
+                    </label>
+
+                    <label class="container-input" for="signup-institutional-email" id="signup-institutional-email-field" style="display:none;">
+                        <img class="svg" src="assets/src/svg/mail.svg" alt="">
+                        <input type="email" name="institutionalEmail" id="signup-institutional-email" placeholder="tu.correo@universidad.edu">
+                    </label>
+
+                    <label class="container-input select-input" for="signup-university">
+                        <img class="svg" src="assets/src/svg/university.svg" alt="">
+                        <select name="university" id="signup-university" required>
+                            <option value="" selected>Selecciona tu universidad</option>
+                        </select>
+                    </label>
+
+                    <label class="container-input" for="signup-phone">
+                        <img class="svg" src="assets/src/svg/phone.svg" alt="">
+                        <input type="tel" name="phone" id="signup-phone" placeholder="3001234567" inputmode="numeric" maxlength="15" required>
                     </label>
 
                     <label class="container-input" for="signup-password">
                         <img class="svg" src="assets/src/svg/lock-closed.svg" alt="">
                         <input type="password" name="password" id="signup-password" placeholder="********" required>
                     </label>
+
+                    <label class="container-input" for="signup-password-confirm">
+                        <img class="svg" src="assets/src/svg/lock-closed.svg" alt="">
+                        <input type="password" name="passwordConfirm" id="signup-password-confirm" placeholder="Confirma tu contraseña" required>
+                    </label>
+
+                    <div class="role-select" role="radiogroup" aria-label="Tipo de cuenta">
+                        <label class="role-option">
+                            <input type="radio" name="role" value="comprador">
+                            Comprador
+                        </label>
+                        <label class="role-option">
+                            <input type="radio" name="role" value="emprendedor">
+                            Emprendedor
+                        </label>
+                    </div>
 
                     <button type="submit" class="button">Crear cuenta</button>
 
@@ -107,6 +145,7 @@
         </div>
     </div>
 
+    <script src="assets/js/shared/auth-verification.js"></script>
     <script src="assets/js/login-js/script.js"></script>
 </body>
 

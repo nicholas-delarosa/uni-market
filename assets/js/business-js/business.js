@@ -1,18 +1,11 @@
 const API_URL = 'http://localhost:3000/api';
 
-// esta vista es solo para emprendedores: necesita sesión iniciada Y
-// que el usuario tenga el rol "vendedor" (se lo asignamos solo cuando
-// verifica su correo institucional). Un estudiante normal logueado
-// no puede entrar aquí solo por tener sesión.
-const usuarioGuardado = JSON.parse(localStorage.getItem('um_usuario') || 'null');
-const esVendedor = !!(usuarioGuardado && Array.isArray(usuarioGuardado.roles) && usuarioGuardado.roles.includes('vendedor'));
+// esta vista es solo para emprendedores: necesita sesión iniciada,
+// un rol de vendedor/emprendedor y correo institucional verificado.
+let usuarioGuardado = JSON.parse(localStorage.getItem('um_usuario') || 'null');
 
-if (!usuarioGuardado) {
-  window.location.href = 'login.html';
-} else if (!esVendedor) {
-  // sí inició sesión, pero no es emprendedor: lo mandamos al marketplace, no al login
-  alert('Esta sección es solo para emprendedores con correo institucional verificado.');
-  window.location.href = 'app.html';
+function isVendedorRole(roles = []) {
+  return roles.some(r => ['vendedor', 'emprendedor'].includes(String(r).toLowerCase()));
 }
 
 let miEmprendimiento = null;
@@ -33,6 +26,77 @@ async function apiSend(method, path, body) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `Error al llamar ${path}`);
   return data;
+}
+
+async function validateAndLoadUser() {
+  if (!usuarioGuardado || !usuarioGuardado.id) {
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/auth/me/${usuarioGuardado.id}`);
+    if (!res.ok) {
+      localStorage.removeItem('um_usuario');
+      return null;
+    }
+
+    const data = await res.json();
+    usuarioGuardado = data.usuario;
+    localStorage.setItem('um_usuario', JSON.stringify(usuarioGuardado));
+    return usuarioGuardado;
+  } catch (err) {
+    console.error('Error validando sesión en panel emprendedor:', err);
+    return null;
+  }
+}
+
+async function ensureInstitutionalVerification(user) {
+  if (!user?.correo_institucional || user.correo_institucional_verificado) {
+    return user;
+  }
+
+  alert('Debes verificar tu correo institucional antes de utilizar el panel de emprendedor.');
+
+  const verifiedUser = await window.UmInstitutionalVerification.promptInstitutionalVerification(user, {
+    successMessage: 'Correo institucional verificado. Ya puedes usar el panel de emprendedor.',
+  });
+
+  if (verifiedUser) {
+    usuarioGuardado = verifiedUser;
+    localStorage.setItem('um_usuario', JSON.stringify(verifiedUser));
+  }
+
+  return verifiedUser;
+}
+
+function getDisplayName(user) {
+  const nombre = String(user?.nombre || '').trim();
+  const apellido = String(user?.apellido || '').trim();
+  return `${nombre} ${apellido}`.trim() || 'Usuario';
+}
+
+function getInitials(user) {
+  const n = String(user?.nombre || '').trim().charAt(0);
+  const a = String(user?.apellido || '').trim().charAt(0);
+  const initials = `${n}${a}`.toUpperCase();
+  return initials || 'U';
+}
+
+function renderAuthenticatedUserInfo(user) {
+  const chipNameEl = document.querySelector('.user-chip-name');
+  if (chipNameEl) chipNameEl.textContent = getDisplayName(user);
+
+  const chipRoleEl = document.querySelector('.user-chip-role');
+  if (chipRoleEl) {
+    const role = (user.roles && user.roles[0]) ? user.roles[0] : 'usuario';
+    chipRoleEl.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+  }
+
+  const chipAvatarEl = document.querySelector('.user-chip .avatar');
+  if (chipAvatarEl) chipAvatarEl.textContent = getInitials(user);
+
+  pageMeta.dashboard.title = `Hola, ${String(user?.nombre || '').trim() || 'Usuario'} 👋`;
+  document.getElementById('page-title').textContent = pageMeta.dashboard.title;
 }
 
 async function recargarProductos() {
@@ -263,27 +327,71 @@ async function cargarResumenDashboard() {
   }
 }
 
+let modoCrearEmprendimiento = false;
+
+function activarModoCrearEmprendimiento() {
+  modoCrearEmprendimiento = true;
+
+  document.getElementById('tienda-nombre').value = '';
+  document.getElementById('tienda-categoria').value = 'Comida';
+  document.getElementById('tienda-universidad').value = usuarioGuardado.universidad_nombre || '';
+  document.getElementById('tienda-whatsapp').value = '';
+  document.getElementById('tienda-hora-apertura').value = '08:00';
+  document.getElementById('tienda-hora-cierre').value = '18:00';
+  document.getElementById('tienda-descripcion').value = '';
+  document.getElementById('tienda-logo').value = '';
+  document.getElementById('tienda-logo-preview').src = '';
+
+  const storeNameEl = document.querySelector('.store-name');
+  if (storeNameEl) storeNameEl.textContent = 'Crea tu negocio';
+  const storeSubEl = document.querySelector('.store-sub');
+  if (storeSubEl) storeSubEl.textContent = 'Todavía no tienes emprendimiento';
+
+  // el botón cambia de "Guardar cambios" a "Crear negocio"
+  const btn = document.getElementById('tienda-guardar');
+  if (btn) btn.textContent = 'Crear negocio';
+
+  // bloquea el resto del panel: nada de eso funciona sin un emprendimiento todavía
+  document.querySelectorAll('[data-view]').forEach(el => {
+    if (el.dataset.view === 'emprendimiento') return;
+    el.style.pointerEvents = 'none';
+    el.style.opacity = '0.4';
+  });
+
+  switchView('emprendimiento');
+  alert('Todavía no tienes un emprendimiento. Completa este formulario para crear el tuyo.');
+}
+
+function desactivarModoCrearEmprendimiento() {
+  modoCrearEmprendimiento = false;
+  const btn = document.getElementById('tienda-guardar');
+  if (btn) btn.textContent = 'Guardar cambios';
+  document.querySelectorAll('[data-view]').forEach(el => {
+    el.style.pointerEvents = '';
+    el.style.opacity = '';
+  });
+}
+
 async function cargarMiTienda() {
   try {
+    renderAuthenticatedUserInfo(usuarioGuardado);
+
     // 1. encontrar el emprendimiento del usuario logueado
     const emprendimientos = await apiGet(`/emprendimientos?usuario_id=${usuarioGuardado.id}`);
     miEmprendimiento = emprendimientos[0];
 
     if (!miEmprendimiento) {
-      console.warn('Este usuario todavía no tiene un emprendimiento creado.');
+      activarModoCrearEmprendimiento();
       return;
     }
+
+    desactivarModoCrearEmprendimiento();
 
     // 2. reflejar el nombre real en el sidebar y el saludo del dashboard
     const storeNameEl = document.querySelector('.store-name');
     if (storeNameEl) storeNameEl.textContent = miEmprendimiento.name;
     const storeSubEl = document.querySelector('.store-sub');
     if (storeSubEl) storeSubEl.textContent = miEmprendimiento.universidad || '';
-
-    const chipNameEl = document.querySelector('.user-chip-name');
-    if (chipNameEl) chipNameEl.textContent = `${usuarioGuardado.nombre} ${usuarioGuardado.apellido.charAt(0)}.`;
-    const chipAvatarEl = document.querySelector('.user-chip .avatar');
-    if (chipAvatarEl) chipAvatarEl.textContent = (usuarioGuardado.nombre[0] + usuarioGuardado.apellido[0]).toUpperCase();
 
     pageMeta.dashboard.title = `Hola, ${usuarioGuardado.nombre} 👋`;
     pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
@@ -308,9 +416,29 @@ async function cargarMiTienda() {
   }
 }
 
-if (esVendedor) {
+(async () => {
+  const user = await validateAndLoadUser();
+
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  if (!isVendedorRole(user.roles || [])) {
+    alert('Esta sección es solo para emprendedores con correo institucional verificado.');
+    window.location.href = 'app.html';
+    return;
+  }
+
+  const verifiedUser = await ensureInstitutionalVerification(user);
+  if (!verifiedUser || !verifiedUser.correo_institucional_verificado) {
+    window.location.href = 'app.html';
+    return;
+  }
+
+  renderAuthenticatedUserInfo(verifiedUser);
   cargarMiTienda();
-}
+})();
 
 /* ---------- Mi tienda: formulario ---------- */
 function cargarFormularioTienda() {
@@ -321,6 +449,16 @@ function cargarFormularioTienda() {
   document.getElementById('tienda-hora-apertura').value = (miEmprendimiento.horaApertura || '08:00:00').slice(0, 5);
   document.getElementById('tienda-hora-cierre').value = (miEmprendimiento.horaCierre || '18:00:00').slice(0, 5);
   document.getElementById('tienda-descripcion').value = miEmprendimiento.descripcion || '';
+  document.getElementById('tienda-logo').value = miEmprendimiento.avatar || '';
+  document.getElementById('tienda-logo-preview').src = miEmprendimiento.avatar || '';
+}
+
+// actualiza el preview mientras escribes la URL, sin esperar a guardar
+const inputTiendaLogo = document.getElementById('tienda-logo');
+if (inputTiendaLogo) {
+  inputTiendaLogo.addEventListener('input', () => {
+    document.getElementById('tienda-logo-preview').src = inputTiendaLogo.value.trim();
+  });
 }
 
 const btnTiendaGuardar = document.getElementById('tienda-guardar');
@@ -339,20 +477,27 @@ if (btnTiendaGuardar) {
       whatsapp: document.getElementById('tienda-whatsapp').value.trim(),
       horaApertura: document.getElementById('tienda-hora-apertura').value,
       horaCierre: document.getElementById('tienda-hora-cierre').value,
+      logo: document.getElementById('tienda-logo').value.trim(),
     };
 
     const originalText = btnTiendaGuardar.textContent;
-    btnTiendaGuardar.textContent = 'Guardando...';
+    btnTiendaGuardar.textContent = modoCrearEmprendimiento ? 'Creando...' : 'Guardando...';
     btnTiendaGuardar.disabled = true;
 
     try {
-      await apiSend('PUT', `/emprendimientos/${miEmprendimiento.id}`, payload);
-      // vuelve a traer el emprendimiento actualizado para que todo (sidebar, saludo) quede sincronizado
-      const emprendimientos = await apiGet(`/emprendimientos?usuario_id=${usuarioGuardado.id}`);
-      miEmprendimiento = emprendimientos[0];
-      document.querySelector('.store-name').textContent = miEmprendimiento.name;
-      pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
-      alert('Los cambios se guardaron correctamente.');
+      if (modoCrearEmprendimiento) {
+        await apiSend('POST', '/emprendimientos', { ...payload, usuario_id: usuarioGuardado.id });
+        alert('¡Tu negocio quedó creado! Ya puedes usar el resto del panel.');
+        await cargarMiTienda(); 
+      } else {
+        await apiSend('PUT', `/emprendimientos/${miEmprendimiento.id}`, payload);
+        // vuelve a traer el emprendimiento actualizado para que todo (sidebar, saludo) quede sincronizado
+        const emprendimientos = await apiGet(`/emprendimientos?usuario_id=${usuarioGuardado.id}`);
+        miEmprendimiento = emprendimientos[0];
+        document.querySelector('.store-name').textContent = miEmprendimiento.name;
+        pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
+        alert('Los cambios se guardaron correctamente.');
+      }
     } catch (err) {
       console.error(err);
       alert(err.message || 'No se pudieron guardar los cambios');
@@ -411,7 +556,7 @@ async function cargarEstadisticas() {
 
 /* ---------- navegación entre secciones ---------- */
 const pageMeta = {
-  dashboard:      { title: 'Hola, Camila 👋', subtitle: 'Esto es lo que pasa hoy en Postres Camila.' },
+  dashboard:      { title: 'Hola 👋', subtitle: 'Esto es lo que pasa hoy en tu tienda.' },
   emprendimiento: { title: 'Mi tienda', subtitle: 'Edita la información pública de tu emprendimiento.' },
   productos:      { title: 'Productos', subtitle: 'Administra lo que ofreces en tu tienda.' },
   inventario:     { title: 'Inventario', subtitle: 'Controla las existencias de cada producto.' },
