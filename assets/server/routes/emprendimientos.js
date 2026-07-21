@@ -43,10 +43,10 @@ router.get('/', async (req, res) => {
         uni.nombre_universidad AS universidad,
         e.categoria_emprendimiento_id AS "categoriaId",
         ce.tipo_emprendimiento AS categoria,
-        NULL::text AS whatsapp,
-        NULL::text AS "horaApertura",
-        NULL::text AS "horaCierre",
-        e.activo AS abierto,
+        e.whatsapp_contacto AS whatsapp,
+        e.hora_apertura AS "horaApertura",
+        e.hora_cierre AS "horaCierre",
+        e.abierto,
         COUNT(DISTINCT p.id)::int AS products,
         COALESCE(ROUND(AVG(r.puntuacion)::numeric, 1), 0) AS rating,
         COALESCE(
@@ -71,6 +71,54 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/emprendimientos
+// body: { usuario_id, nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre }
+router.post('/', async (req, res) => {
+  const { usuario_id, nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre } = req.body;
+
+  if (!usuario_id || !nombre) {
+    return res.status(400).json({ error: 'usuario_id y nombre son obligatorios' });
+  }
+
+  try {
+    // el usuario tiene que existir y ya tener universidad asignada
+    const usuarioResult = await pool.query(
+      'SELECT universidad_id FROM usuarios WHERE id = $1',
+      [usuario_id]
+    );
+    if (usuarioResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    const universidadId = usuarioResult.rows[0].universidad_id;
+
+    // evita que un usuario termine con 2 emprendimientos por error
+    const existente = await pool.query(
+      'SELECT id FROM emprendimientos WHERE usuario_id = $1 AND activo = true',
+      [usuario_id]
+    );
+    if (existente.rows.length > 0) {
+      return res.status(409).json({ error: 'Este usuario ya tiene un emprendimiento creado' });
+    }
+
+    const categoriaId = await getOrCreateCategoriaEmprendimientoId(categoria);
+
+    const result = await pool.query(
+      `INSERT INTO emprendimientos
+         (nombre_emprendimiento, descripcion, usuario_id, universidad_id, categoria_emprendimiento_id,
+          whatsapp_contacto, hora_apertura, hora_cierre, activo, abierto)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, true)
+       RETURNING id`,
+      [nombre, descripcion || null, usuario_id, universidadId, categoriaId,
+       whatsapp || null, horaApertura || null, horaCierre || null]
+    );
+
+    res.status(201).json({ id: result.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear el emprendimiento' });
+  }
+});
+
 // PUT /api/emprendimientos/:id
 // body: { nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre }
 router.put('/:id', async (req, res) => {
@@ -88,10 +136,13 @@ router.put('/:id', async (req, res) => {
       `UPDATE emprendimientos
        SET nombre_emprendimiento = $1,
            categoria_emprendimiento_id = $2,
-           descripcion = $3
-       WHERE id = $4
+           descripcion = $3,
+           whatsapp_contacto = $4,
+           hora_apertura = $5,
+           hora_cierre = $6
+       WHERE id = $7
        RETURNING id`,
-      [nombre, categoriaId, descripcion || null, id]
+      [nombre, categoriaId, descripcion || null, whatsapp || null, horaApertura || null, horaCierre || null, id]
     );
 
     if (result.rows.length === 0) {
@@ -105,7 +156,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// PATCH /api/emprendimientos/:id  body: { abierto: bool }
 router.patch('/:id', async (req, res) => {
   const { id } = req.params;
   const { abierto } = req.body;
@@ -116,7 +166,7 @@ router.patch('/:id', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'UPDATE emprendimientos SET activo = $1 WHERE id = $2 RETURNING id',
+      'UPDATE emprendimientos SET abierto = $1 WHERE id = $2 RETURNING id',
       [abierto, id]
     );
 

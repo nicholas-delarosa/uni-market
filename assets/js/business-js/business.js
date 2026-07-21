@@ -327,6 +327,49 @@ async function cargarResumenDashboard() {
   }
 }
 
+let modoCrearEmprendimiento = false;
+
+function activarModoCrearEmprendimiento() {
+  modoCrearEmprendimiento = true;
+
+  document.getElementById('tienda-nombre').value = '';
+  document.getElementById('tienda-categoria').value = 'Comida';
+  document.getElementById('tienda-universidad').value = usuarioGuardado.universidad_nombre || '';
+  document.getElementById('tienda-whatsapp').value = '';
+  document.getElementById('tienda-hora-apertura').value = '08:00';
+  document.getElementById('tienda-hora-cierre').value = '18:00';
+  document.getElementById('tienda-descripcion').value = '';
+
+  const storeNameEl = document.querySelector('.store-name');
+  if (storeNameEl) storeNameEl.textContent = 'Crea tu negocio';
+  const storeSubEl = document.querySelector('.store-sub');
+  if (storeSubEl) storeSubEl.textContent = 'Todavía no tienes emprendimiento';
+
+  // el botón cambia de "Guardar cambios" a "Crear negocio"
+  const btn = document.getElementById('tienda-guardar');
+  if (btn) btn.textContent = 'Crear negocio';
+
+  // bloquea el resto del panel: nada de eso funciona sin un emprendimiento todavía
+  document.querySelectorAll('[data-view]').forEach(el => {
+    if (el.dataset.view === 'emprendimiento') return;
+    el.style.pointerEvents = 'none';
+    el.style.opacity = '0.4';
+  });
+
+  switchView('emprendimiento');
+  alert('Todavía no tienes un emprendimiento. Completa este formulario para crear el tuyo.');
+}
+
+function desactivarModoCrearEmprendimiento() {
+  modoCrearEmprendimiento = false;
+  const btn = document.getElementById('tienda-guardar');
+  if (btn) btn.textContent = 'Guardar cambios';
+  document.querySelectorAll('[data-view]').forEach(el => {
+    el.style.pointerEvents = '';
+    el.style.opacity = '';
+  });
+}
+
 async function cargarMiTienda() {
   try {
     renderAuthenticatedUserInfo(usuarioGuardado);
@@ -336,9 +379,11 @@ async function cargarMiTienda() {
     miEmprendimiento = emprendimientos[0];
 
     if (!miEmprendimiento) {
-      console.warn('Este usuario todavía no tiene un emprendimiento creado.');
+      activarModoCrearEmprendimiento();
       return;
     }
+
+    desactivarModoCrearEmprendimiento();
 
     // 2. reflejar el nombre real en el sidebar y el saludo del dashboard
     const storeNameEl = document.querySelector('.store-name');
@@ -423,17 +468,23 @@ if (btnTiendaGuardar) {
     };
 
     const originalText = btnTiendaGuardar.textContent;
-    btnTiendaGuardar.textContent = 'Guardando...';
+    btnTiendaGuardar.textContent = modoCrearEmprendimiento ? 'Creando...' : 'Guardando...';
     btnTiendaGuardar.disabled = true;
 
     try {
-      await apiSend('PUT', `/emprendimientos/${miEmprendimiento.id}`, payload);
-      // vuelve a traer el emprendimiento actualizado para que todo (sidebar, saludo) quede sincronizado
-      const emprendimientos = await apiGet(`/emprendimientos?usuario_id=${usuarioGuardado.id}`);
-      miEmprendimiento = emprendimientos[0];
-      document.querySelector('.store-name').textContent = miEmprendimiento.name;
-      pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
-      alert('Los cambios se guardaron correctamente.');
+      if (modoCrearEmprendimiento) {
+        await apiSend('POST', '/emprendimientos', { ...payload, usuario_id: usuarioGuardado.id });
+        alert('¡Tu negocio quedó creado! Ya puedes usar el resto del panel.');
+        await cargarMiTienda();
+      } else {
+        await apiSend('PUT', `/emprendimientos/${miEmprendimiento.id}`, payload);
+        // vuelve a traer el emprendimiento actualizado para que todo (sidebar, saludo) quede sincronizado
+        const emprendimientos = await apiGet(`/emprendimientos?usuario_id=${usuarioGuardado.id}`);
+        miEmprendimiento = emprendimientos[0];
+        document.querySelector('.store-name').textContent = miEmprendimiento.name;
+        pageMeta.dashboard.subtitle = `Esto es lo que pasa hoy en ${miEmprendimiento.name}.`;
+        alert('Los cambios se guardaron correctamente.');
+      }
     } catch (err) {
       console.error(err);
       alert(err.message || 'No se pudieron guardar los cambios');
