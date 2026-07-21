@@ -33,14 +33,70 @@
     return res.json();
   }
 
+  const AUTH_REDIRECT_KEY = 'um_post_login_redirect';
+  const AUTH_INTENT_KEY = 'um_auth_intent';
+  const GUEST_UNIVERSITY_KEY = 'um_guest_university';
+  const GUEST_FAVORITES_KEY = 'um_guest_favorites';
+
   /* ================= AUTENTICACIÓN ================= */
   let currentUser = null;
 
+  function isAuthenticated() {
+    return Boolean(currentUser && currentUser.id);
+  }
+
+  function saveAuthIntent(intent) {
+    if (!intent) return;
+    localStorage.setItem(AUTH_INTENT_KEY, JSON.stringify(intent));
+  }
+
+  function getAuthIntent() {
+    const raw = localStorage.getItem(AUTH_INTENT_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (err) {
+      localStorage.removeItem(AUTH_INTENT_KEY);
+      return null;
+    }
+  }
+
+  function clearAuthIntent() {
+    localStorage.removeItem(AUTH_INTENT_KEY);
+  }
+
+  function loadGuestFavorites() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(GUEST_FAVORITES_KEY) || '[]');
+      return Array.isArray(stored) ? stored.map(id => Number(id)).filter(Boolean) : [];
+    } catch (err) {
+      localStorage.removeItem(GUEST_FAVORITES_KEY);
+      return [];
+    }
+  }
+
+  function saveGuestFavorites() {
+    localStorage.setItem(GUEST_FAVORITES_KEY, JSON.stringify(state.favorites));
+  }
+
+  function redirectToLogin(message, intent = null, options = {}) {
+    if (message) alert(message);
+    localStorage.setItem(AUTH_REDIRECT_KEY, 'app.html');
+    saveAuthIntent(intent);
+    const params = new URLSearchParams();
+    if (options.mode === 'register') params.set('mode', 'register');
+    window.location.href = `login.html${params.toString() ? `?${params.toString()}` : ''}`;
+  }
+
+  function requireAuth(message, intent = null, options = {}) {
+    if (isAuthenticated()) return true;
+    redirectToLogin(message || 'Debes iniciar sesión para continuar.', intent, options);
+    return false;
+  }
+
   async function validateAndLoadUser() {
-    // 1. Verificar si existe usuario en localStorage
     const savedUser = localStorage.getItem('um_usuario');
     if (!savedUser) {
-      window.location.href = 'login.html';
       return null;
     }
 
@@ -51,7 +107,6 @@
       const response = await fetch(`${API_URL}/auth/me/${user.id}`);
       if (!response.ok) {
         localStorage.removeItem('um_usuario');
-        window.location.href = 'login.html';
         return null;
       }
 
@@ -62,13 +117,13 @@
     } catch (err) {
       console.error('Error validando usuario:', err);
       localStorage.removeItem('um_usuario');
-      window.location.href = 'login.html';
       return null;
     }
   }
 
   function logout() {
     localStorage.removeItem('um_usuario');
+    clearAuthIntent();
     window.location.href = 'login.html';
   }
 
@@ -106,6 +161,7 @@
     sellerFilter: null,
     sort: 'relevance',
     favorites: [], // Array de IDs de productos favoritos, se cargará desde BD
+    guest: true,
   };
 
   const fmt = (n) => '$ ' + n.toLocaleString('es-CO');
@@ -136,17 +192,18 @@
   async function selectUniversity(id) {
     const uni = universities.find(u => u.id == id);
     if (!uni) return;
-    
+
     try {
-      // Guardar la universidad en la BD
-      const response = await apiPut(`/auth/universidad/${currentUser.id}`, {
-        universidad_id: uni.id
-      });
-      
-      // Actualizar datos del usuario actual
-      currentUser = response.usuario;
-      localStorage.setItem('um_usuario', JSON.stringify(currentUser));
-      
+      if (isAuthenticated()) {
+        const response = await apiPut(`/auth/universidad/${currentUser.id}`, {
+          universidad_id: uni.id
+        });
+        currentUser = response.usuario;
+        localStorage.setItem('um_usuario', JSON.stringify(currentUser));
+      } else {
+        localStorage.setItem(GUEST_UNIVERSITY_KEY, String(uni.id));
+      }
+
       state.university = uni;
       localStorage.setItem('um_university', id);
 
@@ -156,8 +213,11 @@
         apiGet(`/productos?universidad_id=${uni.id}`),
       ]);
 
-      // Cargar favoritos del usuario
-      await loadFavoritos();
+      if (isAuthenticated()) {
+        await loadFavoritos();
+      } else {
+        state.favorites = loadGuestFavorites();
+      }
 
       uniSelectorScreen.style.display = 'none';
       appShell.style.display = 'flex';
@@ -172,6 +232,9 @@
   }
 
   function openUniSelector() {
+    if (!isAuthenticated() && state.university && !confirm('Cambiar universidad reiniciará la vista actual.')) {
+      return;
+    }
     appShell.style.display = 'none';
     uniSelectorScreen.style.display = 'flex';
     uniSearchInput.value = '';
@@ -209,7 +272,6 @@
     });
   });
   document.getElementById('sidebarUniSwitch').addEventListener('click', openUniSelector);
-  document.getElementById('sidebarLogout').addEventListener('click', logout);
 
   searchInput.addEventListener('input', (e) => {
     state.search = e.target.value;
@@ -231,7 +293,11 @@
       topbarTitle.textContent = 'Mi perfil';
       topbarSubtitle.textContent = '';
       topbarSearchWrap.style.display = 'none';
-      renderProfile();
+      if (isAuthenticated()) {
+        renderProfile();
+      } else {
+        renderGuestProfile();
+      }
     } else if (state.view === 'favorites') {
       topbarTitle.textContent = 'Favoritos';
       topbarSubtitle.textContent = '';
@@ -335,7 +401,7 @@
       const isFav = state.favorites.includes(p.id);
       return `
         <div class="product-card">
-          <div class="product-photo">
+          <div class="product-photo" data-open-product="${p.id}">
             <img src="${p.image}" alt="${p.name}">
             <span class="product-cat">${p.category}</span>
             <button class="fav-btn ${isFav ? 'active' : ''}" data-fav="${p.id}">
@@ -343,7 +409,7 @@
             </button>
           </div>
           <div class="product-body">
-            <div class="product-name">${p.name}</div>
+            <div class="product-name" data-open-product="${p.id}">${p.name}</div>
             <div class="product-seller"><button data-seller="${p.sellerId}">${seller ? seller.name : ''}</button></div>
             <div class="product-price">${fmt(p.price)}</div>
             <button class="btn product-cta" data-add-to-cart="${p.id}">Agregar al carrito</button>
@@ -357,6 +423,12 @@
         const id = parseInt(btn.dataset.fav);
         await toggleFavorito(id);
         renderCatalogGrid();
+      });
+    });
+    grid.querySelectorAll('[data-open-product]').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const productId = Number(trigger.dataset.openProduct);
+        openProductDetail(productId);
       });
     });
     grid.querySelectorAll('[data-add-to-cart]').forEach(btn => {
@@ -437,7 +509,7 @@
 
     grid.innerHTML = favProducts.map(p => `
       <div class="product-card">
-        <div class="product-photo">
+        <div class="product-photo" data-open-product="${p.id}">
           <img src="${p.image}" alt="${p.name}">
           <span class="product-cat">${p.category}</span>
           <button class="fav-btn active" data-fav="${p.id}">
@@ -445,7 +517,7 @@
           </button>
         </div>
         <div class="product-body">
-          <div class="product-name">${p.name}</div>
+          <div class="product-name" data-open-product="${p.id}">${p.name}</div>
           <div class="product-seller"><button data-seller="${p.sellerId}">${p.sellerName || ''}</button></div>
           <div class="product-price">${fmt(p.price)}</div>
           <button class="btn product-cta" data-add-to-cart="${p.id}">Agregar al carrito</button>
@@ -466,6 +538,13 @@
       btn.addEventListener('click', () => {
         const productId = Number(btn.dataset.addToCart);
         addToCart(productId, 1);
+      });
+    });
+
+    grid.querySelectorAll('[data-open-product]').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const productId = Number(trigger.dataset.openProduct);
+        openProductDetail(productId);
       });
     });
   }
@@ -541,6 +620,36 @@
     
     // Cargar historial de pedidos
     loadUserPedidos();
+  }
+
+  function renderGuestProfile() {
+    content.innerHTML = `
+      <div class="profile-wrap">
+        <div class="profile-card">
+          <div class="avatar-lg">I</div>
+          <div>
+            <h3 class="profile-name">Modo invitado</h3>
+            <div class="profile-sub">Puedes explorar el marketplace libremente y comprar cuando inicies sesión.</div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <h3>Tu acceso actual</h3>
+          <p class="profile-fav-empty">Puedes recorrer el catálogo, buscar productos, revisar emprendimientos, guardar favoritos temporales y preparar tu carrito.</p>
+        </div>
+
+        <div class="profile-section">
+          <h3>Cuando quieras comprar</h3>
+          <div class="profile-actions">
+            <button class="btn btn-outline btn-sm" id="guestGoLogin">Iniciar sesión</button>
+            <button class="btn btn-outline btn-sm" id="guestGoRegister">Crear cuenta</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('guestGoLogin').addEventListener('click', () => redirectToLogin('', { type: 'view', view: 'profile' }));
+    document.getElementById('guestGoRegister').addEventListener('click', () => redirectToLogin('', { type: 'view', view: 'profile' }, { mode: 'register' }));
   }
 
   async function loadUserPedidos() {
@@ -625,23 +734,19 @@
 
   /* ================= INIT ================= */
   async function init() {
-    // 1. Validar que el usuario esté autenticado
     const user = await validateAndLoadUser();
-    if (!user) return; // validateAndLoadUser ya redirige a login si hay error
+    state.guest = !user;
 
-    // 2. Cargar universidades
     universities = await apiGet('/universidades');
     universities = universities.map(u => ({
       ...u,
       logo: LOGOS_UNIVERSIDAD[u.name] || LOGO_FALLBACK,
     }));
 
-    // 3. Actualizar topbar con datos del usuario
     updateTopbar();
     updateCartBadge();
 
-    // 4. Si el usuario ya tiene universidad asignada, cargar directamente
-    if (currentUser.universidad_id) {
+    if (currentUser && currentUser.universidad_id) {
       const userUni = universities.find(u => u.id === currentUser.universidad_id);
       if (userUni) {
         state.university = userUni;
@@ -653,7 +758,6 @@
           apiGet(`/productos?universidad_id=${userUni.id}`),
         ]);
 
-        // Cargar favoritos del usuario
         await loadFavoritos();
 
         uniSelectorScreen.style.display = 'none';
@@ -663,21 +767,53 @@
         document.getElementById('sidebarUniName').textContent = userUni.name;
         setView('catalog');
       } else {
-        // Universidad_id no válida, mostrar selector
         renderUniGrid();
       }
     } else {
-      // No tiene universidad, mostrar selector
-      renderUniGrid();
+      const guestUniversityId = localStorage.getItem(GUEST_UNIVERSITY_KEY);
+      const defaultUni = universities.find(u => String(u.id) === String(guestUniversityId)) || universities[0] || null;
+
+      if (defaultUni) {
+        state.university = defaultUni;
+        [sellers, products] = await Promise.all([
+          apiGet(`/emprendimientos?universidad_id=${defaultUni.id}`),
+          apiGet(`/productos?universidad_id=${defaultUni.id}`),
+        ]);
+
+        state.favorites = loadGuestFavorites();
+        uniSelectorScreen.style.display = 'none';
+        appShell.style.display = 'flex';
+        document.getElementById('sidebarUniImg').src = defaultUni.logo;
+        document.getElementById('sidebarUniImg').alt = defaultUni.name;
+        document.getElementById('sidebarUniName').textContent = defaultUni.name;
+        setView('catalog');
+      } else {
+        renderUniGrid();
+      }
     }
+
+    handlePostLoginIntent();
   }
 
   function updateTopbar() {
-    if (!currentUser) return;
-    
     const topbarUserName = document.querySelector('.topbar-user-name');
     const topbarUserRole = document.querySelector('.topbar-user-role');
     const avatarSm = document.querySelector('.avatar-sm');
+    const logoutButton = document.getElementById('sidebarLogout');
+    const logoutLabel = logoutButton ? logoutButton.childNodes[logoutButton.childNodes.length - 1] : null;
+
+    if (!currentUser) {
+      if (topbarUserName) topbarUserName.textContent = 'Invitado';
+      if (topbarUserRole) topbarUserRole.textContent = 'Exploración pública';
+      if (avatarSm) avatarSm.textContent = 'I';
+      if (logoutButton) {
+        logoutButton.onclick = () => redirectToLogin('Inicia sesión para acceder a funciones privadas.');
+      }
+      if (logoutLabel && logoutLabel.nodeType === Node.TEXT_NODE) {
+        logoutLabel.textContent = ' Iniciar sesión';
+      }
+      return;
+    }
     
     if (topbarUserName) {
       topbarUserName.textContent = `${currentUser.nombre} ${currentUser.apellido}`.trim();
@@ -691,10 +827,16 @@
     }
     
     if (avatarSm) {
-      // Iniciales del nombre
       const initials = (currentUser.nombre || 'U').charAt(0).toUpperCase() +
                        (currentUser.apellido || '').charAt(0).toUpperCase();
       avatarSm.textContent = initials;
+    }
+
+    if (logoutButton) {
+      logoutButton.onclick = logout;
+    }
+    if (logoutLabel && logoutLabel.nodeType === Node.TEXT_NODE) {
+      logoutLabel.textContent = ' Cerrar sesión';
     }
   }
 
@@ -926,6 +1068,8 @@
   }
 
   async function checkout() {
+    if (!requireAuth('Debes iniciar sesión para completar la compra.', { type: 'checkout' })) return;
+
     if (cart.length === 0) {
       alert('El carrito está vacío');
       return;
@@ -973,6 +1117,11 @@
   /* ================ FAVORITOS ============== */
   async function loadFavoritos() {
     try {
+      if (!isAuthenticated()) {
+        state.favorites = loadGuestFavorites();
+        return;
+      }
+
       const favoritos = await apiGet(`/favoritos?usuario_id=${currentUser.id}`);
       state.favorites = favoritos.map(f => Number(f.producto_id));
     } catch (err) {
@@ -982,6 +1131,17 @@
   }
 
   async function toggleFavorito(productId) {
+    if (!isAuthenticated()) {
+      const normalizedId = Number(productId);
+      if (state.favorites.includes(normalizedId)) {
+        state.favorites = state.favorites.filter(id => id !== normalizedId);
+      } else {
+        state.favorites.push(normalizedId);
+      }
+      saveGuestFavorites();
+      return;
+    }
+
     try {
       if (state.favorites.includes(Number(productId))) {
         // Eliminar de favoritos
@@ -998,6 +1158,82 @@
     } catch (err) {
       console.error('Error actualizando favorito:', err);
       alert('Error al actualizar favoritos');
+    }
+  }
+
+  function openProductDetail(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const seller = sellers.find(s => s.id === product.sellerId);
+    const existingModal = document.getElementById('productDetailModal');
+    if (existingModal) existingModal.remove();
+
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="productDetailModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;">
+        <div style="width:min(560px,100%);background:var(--color-surface);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-card);">
+          <img src="${product.image}" alt="${product.name}" style="width:100%;height:260px;object-fit:cover;display:block;">
+          <div style="padding:24px;display:grid;gap:12px;">
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+              <div>
+                <div style="font-size:12px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em;">${product.category || 'Producto'}</div>
+                <h3 style="margin:6px 0 0;font-size:24px;">${product.name}</h3>
+              </div>
+              <button id="closeProductDetail" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--color-text-muted);">×</button>
+            </div>
+            <div style="color:var(--color-text-muted);">${seller ? seller.name : 'Emprendimiento universitario'}</div>
+            <div style="font-size:26px;font-weight:700;">${fmt(product.price)}</div>
+            <div style="color:var(--color-text-muted);">Disponibles: ${product.stock ?? 0}</div>
+            <div style="display:flex;gap:12px;">
+              <button class="btn product-cta" id="detailAddToCart">Agregar al carrito</button>
+              <button class="btn btn-outline" id="detailToggleFavorite">${state.favorites.includes(product.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `);
+
+    const detailModal = document.getElementById('productDetailModal');
+    detailModal.addEventListener('click', (event) => {
+      if (event.target === detailModal) detailModal.remove();
+    });
+    document.getElementById('closeProductDetail').addEventListener('click', () => detailModal.remove());
+    document.getElementById('detailAddToCart').addEventListener('click', () => {
+      addToCart(product.id, 1);
+      if (isAuthenticated()) detailModal.remove();
+    });
+    document.getElementById('detailToggleFavorite').addEventListener('click', async () => {
+      await toggleFavorito(product.id);
+      if (detailModal.isConnected) detailModal.remove();
+      if (state.view === 'catalog') renderCatalogGrid();
+      if (state.view === 'favorites') renderFavorites();
+    });
+  }
+
+  function handlePostLoginIntent() {
+    if (!isAuthenticated()) return;
+    const intent = getAuthIntent();
+    if (!intent) return;
+
+    clearAuthIntent();
+
+    if (intent.type === 'addToCart') {
+      addToCart(Number(intent.productId), Number(intent.quantity) || 1);
+      return;
+    }
+
+    if (intent.type === 'toggleFavorite') {
+      toggleFavorito(Number(intent.productId));
+      return;
+    }
+
+    if (intent.type === 'openCart' || intent.type === 'checkout') {
+      renderCartModal();
+      return;
+    }
+
+    if (intent.type === 'view' && intent.view) {
+      setView(intent.view);
     }
   }
 

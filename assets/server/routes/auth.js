@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
+const VALID_REGISTER_ROLES = ['comprador', 'emprendedor'];
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidPhone(value) {
+  return /^\d{7,15}$/.test(String(value || ''));
+}
+
+function isStrongPassword(value) {
+  return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(value || ''));
+}
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { correo, contrasena } = req.body;
@@ -13,7 +27,7 @@ router.post('/login', async (req, res) => {
   try {
     // 1. Buscar el usuario por correo
     const result = await pool.query(
-      `SELECT id, nombre, apellido, correo, contrasena, universidad_id, activo
+      `SELECT id, nombre, apellido, correo, telefono, contrasena, universidad_id, activo
        FROM usuarios
        WHERE correo = $1`,
       [correo]
@@ -58,42 +72,90 @@ router.post('/login', async (req, res) => {
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { nombre, apellido, correo, contrasena } = req.body;
+  const { nombre, apellido, telefono, universidad_id, rol, correo, contrasena } = req.body;
 
-  if (!nombre || !correo || !contrasena) {
-    return res.status(400).json({ error: 'Nombre, correo y contraseña son obligatorios' });
+  if (!nombre || !apellido || !telefono || !universidad_id || !rol || !correo || !contrasena) {
+    return res.status(400).json({ error: 'Todos los campos del registro son obligatorios' });
   }
 
+  if (!isValidEmail(correo)) {
+    return res.status(400).json({ error: 'Ingresa un correo válido' });
+  }
+
+  if (!isValidPhone(telefono)) {
+    return res.status(400).json({ error: 'Ingresa un teléfono válido de 7 a 15 dígitos' });
+  }
+
+  if (!isStrongPassword(contrasena)) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, incluyendo letras y números' });
+  }
+
+  if (!VALID_REGISTER_ROLES.includes(String(rol).toLowerCase())) {
+    return res.status(400).json({ error: 'Rol inválido' });
+  }
+
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
+
     // 1. Verificar que el correo no esté ya registrado
-    const existe = await pool.query(
+    const existe = await client.query(
       `SELECT id FROM usuarios WHERE correo = $1`,
       [correo]
     );
 
     if (existe.rows.length > 0) {
+      await client.query('ROLLBACK');
       return res.status(409).json({ error: 'Ya existe una cuenta con ese correo' });
     }
 
+    const universidad = await client.query(
+      `SELECT id FROM universidades WHERE id = $1`,
+      [universidad_id]
+    );
+
+    if (universidad.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'La universidad seleccionada no existe' });
+    }
+
+    const roleResult = await client.query(
+      `SELECT id, rol FROM roles WHERE LOWER(rol) = LOWER($1) LIMIT 1`,
+      [rol]
+    );
+
+    if (roleResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'El rol seleccionado no está configurado en la base de datos' });
+    }
+
     // 2. Crear el usuario
-    // Nota: universidad_id queda en null porque el formulario de registro
-    // todavía no pide universidad. Si la columna es NOT NULL en la BD,
-    // esta consulta va a fallar y hay que agregar ese campo al formulario.
-    const result = await pool.query(
-      `INSERT INTO usuarios (nombre, apellido, correo, contrasena, activo)
-       VALUES ($1, $2, $3, $4, true)
-       RETURNING id, nombre, apellido, correo, universidad_id, activo`,
-      [nombre, apellido || '', correo, contrasena]
+    const result = await client.query(
+      `INSERT INTO usuarios (nombre, apellido, correo, contrasena, telefono, universidad_id, activo)
+       VALUES ($1, $2, $3, $4, $5, $6, true)
+       RETURNING id, nombre, apellido, correo, telefono, universidad_id, activo`,
+      [nombre, apellido, correo, contrasena, telefono, universidad_id]
     );
 
     const usuario = result.rows[0];
 
+    await client.query(
+      `INSERT INTO usuario_roles (usuario_id, rol_id)
+       VALUES ($1, $2)`,
+      [usuario.id, roleResult.rows[0].id]
+    );
+
+    await client.query('COMMIT');
+
     // 3. Responder igual que /login (mismo shape: { usuario: {...} })
     // para que el front pueda reusar la misma lógica de guardado en localStorage
-    res.status(201).json({ usuario: { ...usuario, roles: [] } });
+    res.status(201).json({ usuario: { ...usuario, roles: [roleResult.rows[0].rol] } });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
     res.status(500).json({ error: 'Error al crear la cuenta' });
+  } finally {
+    client.release();
   }
 });
 
@@ -108,7 +170,7 @@ router.get('/me/:usuarioId', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, nombre, apellido, correo, universidad_id, activo
+      `SELECT id, nombre, apellido, correo, telefono, universidad_id, activo
        FROM usuarios
        WHERE id = $1`,
       [usuarioId]
@@ -168,7 +230,7 @@ router.put('/universidad/:usuarioId', async (req, res) => {
       `UPDATE usuarios 
        SET universidad_id = $1 
        WHERE id = $2
-       RETURNING id, nombre, apellido, correo, universidad_id, activo`,
+       RETURNING id, nombre, apellido, correo, telefono, universidad_id, activo`,
       [universidad_id, usuarioId]
     );
 

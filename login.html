@@ -14,7 +14,7 @@
 
 <body>
     <div class="auth-page">
-        <a href="index.html" class="back-home-link">← Volver al inicio</a>
+        <a href="landing.html" class="back-home-link">← Volver al inicio</a>
 
         <div class="auth-shell">
             <div class="auth-visual">
@@ -76,7 +76,12 @@
 
                     <label class="container-input" for="signup-name">
                         <img class="svg" src="assets/src/svg/person.svg" alt="">
-                        <input type="text" name="name" id="signup-name" placeholder="Nombre completo" required>
+                        <input type="text" name="name" id="signup-name" placeholder="Nombre" required>
+                    </label>
+
+                    <label class="container-input" for="signup-lastname">
+                        <img class="svg" src="assets/src/svg/person.svg" alt="">
+                        <input type="text" name="lastname" id="signup-lastname" placeholder="Apellidos" required>
                     </label>
 
                     <label class="container-input" for="signup-email">
@@ -84,10 +89,38 @@
                         <input type="email" name="email" id="signup-email" placeholder="jesus.noguera@riwi.io" required>
                     </label>
 
+                    <label class="container-input select-input" for="signup-university">
+                        <img class="svg" src="assets/src/svg/university.svg" alt="">
+                        <select name="university" id="signup-university" required>
+                            <option value="" selected>Selecciona tu universidad</option>
+                        </select>
+                    </label>
+
+                    <label class="container-input" for="signup-phone">
+                        <img class="svg" src="assets/src/svg/phone.svg" alt="">
+                        <input type="tel" name="phone" id="signup-phone" placeholder="3001234567" inputmode="numeric" maxlength="15" required>
+                    </label>
+
                     <label class="container-input" for="signup-password">
                         <img class="svg" src="assets/src/svg/lock-closed.svg" alt="">
                         <input type="password" name="password" id="signup-password" placeholder="********" required>
                     </label>
+
+                    <label class="container-input" for="signup-password-confirm">
+                        <img class="svg" src="assets/src/svg/lock-closed.svg" alt="">
+                        <input type="password" name="passwordConfirm" id="signup-password-confirm" placeholder="Confirma tu contraseña" required>
+                    </label>
+
+                    <div class="role-select" role="radiogroup" aria-label="Tipo de cuenta">
+                        <label class="role-option">
+                            <input type="radio" name="role" value="comprador">
+                            Comprador
+                        </label>
+                        <label class="role-option">
+                            <input type="radio" name="role" value="emprendedor">
+                            Emprendedor
+                        </label>
+                    </div>
 
                     <button type="submit" class="button">Crear cuenta</button>
 

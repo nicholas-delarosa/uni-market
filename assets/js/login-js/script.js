@@ -14,6 +14,19 @@ modeToggle.addEventListener("click", () => {
 
 /* ================= CONFIG ================= */
 const API_URL = 'http://localhost:3000/api';
+const AUTH_REDIRECT_KEY = 'um_post_login_redirect';
+
+function getPostAuthRedirect() {
+  const redirect = localStorage.getItem(AUTH_REDIRECT_KEY) || 'app.html';
+  localStorage.removeItem(AUTH_REDIRECT_KEY);
+  return redirect;
+}
+
+async function apiGet(path) {
+  const res = await fetch(`${API_URL}${path}`);
+  if (!res.ok) throw new Error(`Error al llamar ${path}`);
+  return res.json();
+}
 
 /* ================= ELEMENTOS ================= */
 const signInForm = document.querySelector('.container-form.sign-in');
@@ -23,28 +36,43 @@ const signInEmail = document.getElementById('signin-email');
 const signInPassword = document.getElementById('signin-password');
 
 const signUpName = document.getElementById('signup-name');
+const signUpLastName = document.getElementById('signup-lastname');
 const signUpEmail = document.getElementById('signup-email');
+const signUpUniversity = document.getElementById('signup-university');
+const signUpPhone = document.getElementById('signup-phone');
 const signUpPassword = document.getElementById('signup-password');
+const signUpPasswordConfirm = document.getElementById('signup-password-confirm');
+const signUpRoleInputs = signUpForm.querySelectorAll('input[name="role"]');
+const signUpRoleGroup = signUpForm.querySelector('.role-select');
 
 const btnSwitchRegister = document.getElementById('registerAs');
 const btnSwitchLogin = document.getElementById('loginAs');
 
+function setAuthMode(mode) {
+  const showRegister = mode === 'register';
+  signInForm.classList.toggle('active', !showRegister);
+  signUpForm.classList.toggle('active', showRegister);
+}
+
 /* ================= CAMBIO ENTRE FORMULARIOS ================= */
 // si el usuario da click en "Crear cuenta"
 btnSwitchRegister.addEventListener('click', () => {
-  signInForm.classList.remove('active');
-  signUpForm.classList.add('active');
+  setAuthMode('register');
 });
 
 // si el usuario da click en "Iniciar sesión"
 btnSwitchLogin.addEventListener('click', () => {
-  signUpForm.classList.remove('active');
-  signInForm.classList.add('active');
+  setAuthMode('login');
 });
+
+const authParams = new URLSearchParams(window.location.search);
+if (authParams.get('mode') === 'register') {
+  setAuthMode('register');
+}
 
 /* ================= HELPERS DE ERROR Y VALIDACIÓN ================= */
 // crea (o reutiliza) un <p> de error justo debajo del último campo del formulario
-function getOrCreateErrorEl(form, afterInput, className) {
+function getOrCreateErrorEl(form, anchorEl, className) {
   let el = form.querySelector(`.${className}`);
   if (!el) {
     el = document.createElement('p');
@@ -53,7 +81,8 @@ function getOrCreateErrorEl(form, afterInput, className) {
     el.style.fontSize = '13px';
     el.style.margin = '-8px 0 4px';
     el.style.display = 'none';
-    afterInput.closest('label').insertAdjacentElement('afterend', el);
+    const container = anchorEl.closest('label, .role-select') || anchorEl;
+    container.insertAdjacentElement('afterend', el);
   }
   return el;
 }
@@ -71,6 +100,32 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function isValidPhone(value) {
+  return /^\d{7,15}$/.test(value);
+}
+
+function isStrongPassword(value) {
+  return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(value);
+}
+
+function getSelectedRole() {
+  const checked = signUpForm.querySelector('input[name="role"]:checked');
+  return checked ? checked.value : '';
+}
+
+async function loadUniversities() {
+  try {
+    const universities = await apiGet('/universidades');
+    signUpUniversity.innerHTML = [
+      '<option value="" selected>Selecciona tu universidad</option>',
+      ...universities.map(u => `<option value="${u.id}">${u.name}</option>`),
+    ].join('');
+  } catch (err) {
+    console.error(err);
+    signUpUniversity.innerHTML = '<option value="" selected>No se pudieron cargar las universidades</option>';
+  }
+}
+
 // deshabilita el botón y cambia su texto mientras se espera respuesta del backend
 function setLoading(form, isLoading, loadingText) {
   const btn = form.querySelector('button[type="submit"]');
@@ -85,7 +140,13 @@ function setLoading(form, isLoading, loadingText) {
 }
 
 const signInError = getOrCreateErrorEl(signInForm, signInPassword, 'signin-error');
-const signUpError = getOrCreateErrorEl(signUpForm, signUpPassword, 'signup-error');
+const signUpError = getOrCreateErrorEl(signUpForm, signUpRoleGroup, 'signup-error');
+
+signUpPhone.addEventListener('input', () => {
+  signUpPhone.value = signUpPhone.value.replace(/\D/g, '');
+});
+
+loadUniversities();
 
 /* ================= LOGIN ================= */
 signInForm.addEventListener('submit', async (e) => {
@@ -122,7 +183,7 @@ signInForm.addEventListener('submit', async (e) => {
 
     // login correcto: guardamos el usuario para que el resto de la app sepa quién entró
     localStorage.setItem('um_usuario', JSON.stringify(data.usuario));
-    window.location.href = 'app.html';
+    window.location.href = getPostAuthRedirect();
 
   } catch (err) {
     console.error(err);
@@ -137,11 +198,16 @@ signUpForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   hideError(signUpError);
 
-  const nombreCompleto = signUpName.value.trim();
+  const nombre = signUpName.value.trim();
+  const apellido = signUpLastName.value.trim();
   const correo = signUpEmail.value.trim();
+  const universidad_id = signUpUniversity.value;
+  const telefono = signUpPhone.value.trim();
   const contrasena = signUpPassword.value;
+  const confirmarContrasena = signUpPasswordConfirm.value;
+  const rol = getSelectedRole();
 
-  if (!nombreCompleto || !correo || !contrasena) {
+  if (!nombre || !apellido || !correo || !universidad_id || !telefono || !contrasena || !confirmarContrasena || !rol) {
     showError(signUpError, 'Completa todos los campos');
     return;
   }
@@ -149,23 +215,33 @@ signUpForm.addEventListener('submit', async (e) => {
     showError(signUpError, 'Ingresa un correo válido');
     return;
   }
-  if (contrasena.length < 6) {
-    showError(signUpError, 'La contraseña debe tener al menos 6 caracteres');
+  if (!isValidPhone(telefono)) {
+    showError(signUpError, 'Ingresa un teléfono válido de 7 a 15 dígitos');
     return;
   }
-
-  // el backend guarda nombre y apellido por separado, pero el formulario
-  // solo pide un campo de "nombre completo": lo partimos en dos.
-  const partes = nombreCompleto.split(/\s+/);
-  const nombre = partes[0];
-  const apellido = partes.slice(1).join(' ');
+  if (!isStrongPassword(contrasena)) {
+    showError(signUpError, 'La contraseña debe tener al menos 8 caracteres, incluyendo letras y números');
+    return;
+  }
+  if (contrasena !== confirmarContrasena) {
+    showError(signUpError, 'Las contraseñas no coinciden');
+    return;
+  }
 
   setLoading(signUpForm, true, 'Creando cuenta...');
   try {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, apellido, correo, contrasena }),
+      body: JSON.stringify({
+        nombre,
+        apellido,
+        telefono,
+        universidad_id: Number(universidad_id),
+        rol,
+        correo,
+        contrasena,
+      }),
     });
 
     const data = await res.json();
@@ -178,7 +254,7 @@ signUpForm.addEventListener('submit', async (e) => {
 
     // cuenta creada: entra directo a la app, igual que si hubiera hecho login
     localStorage.setItem('um_usuario', JSON.stringify(data.usuario));
-    window.location.href = 'app.html';
+    window.location.href = getPostAuthRedirect();
 
   } catch (err) {
     console.error(err);
