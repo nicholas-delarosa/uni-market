@@ -72,9 +72,9 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/emprendimientos
-// body: { usuario_id, nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre }
+// body: { usuario_id, nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre, logo }
 router.post('/', async (req, res) => {
-  const { usuario_id, nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre } = req.body;
+  const { usuario_id, nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre, logo } = req.body;
 
   if (!usuario_id || !nombre) {
     return res.status(400).json({ error: 'usuario_id y nombre son obligatorios' });
@@ -105,11 +105,11 @@ router.post('/', async (req, res) => {
     const result = await pool.query(
       `INSERT INTO emprendimientos
          (nombre_emprendimiento, descripcion, usuario_id, universidad_id, categoria_emprendimiento_id,
-          whatsapp_contacto, hora_apertura, hora_cierre, activo, abierto)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, true)
+          whatsapp_contacto, hora_apertura, hora_cierre, logo_url, activo, abierto)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, true)
        RETURNING id`,
       [nombre, descripcion || null, usuario_id, universidadId, categoriaId,
-       whatsapp || null, horaApertura || null, horaCierre || null]
+       whatsapp || null, horaApertura || null, horaCierre || null, logo || null]
     );
 
     res.status(201).json({ id: result.rows[0].id });
@@ -120,10 +120,10 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/emprendimientos/:id
-// body: { nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre }
+// body: { nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre, logo }
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre } = req.body;
+  const { nombre, categoria, descripcion, whatsapp, horaApertura, horaCierre, logo } = req.body;
 
   if (!nombre) {
     return res.status(400).json({ error: 'El nombre del emprendimiento es obligatorio' });
@@ -139,10 +139,11 @@ router.put('/:id', async (req, res) => {
            descripcion = $3,
            whatsapp_contacto = $4,
            hora_apertura = $5,
-           hora_cierre = $6
-       WHERE id = $7
+           hora_cierre = $6,
+           logo_url = COALESCE($7, logo_url)
+       WHERE id = $8
        RETURNING id`,
-      [nombre, categoriaId, descripcion || null, whatsapp || null, horaApertura || null, horaCierre || null, id]
+      [nombre, categoriaId, descripcion || null, whatsapp || null, horaApertura || null, horaCierre || null, logo || null, id]
     );
 
     if (result.rows.length === 0) {

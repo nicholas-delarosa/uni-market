@@ -339,6 +339,8 @@ function activarModoCrearEmprendimiento() {
   document.getElementById('tienda-hora-apertura').value = '08:00';
   document.getElementById('tienda-hora-cierre').value = '18:00';
   document.getElementById('tienda-descripcion').value = '';
+  document.getElementById('tienda-logo').value = '';
+  document.getElementById('tienda-logo-preview').src = '';
 
   const storeNameEl = document.querySelector('.store-name');
   if (storeNameEl) storeNameEl.textContent = 'Crea tu negocio';
@@ -447,6 +449,16 @@ function cargarFormularioTienda() {
   document.getElementById('tienda-hora-apertura').value = (miEmprendimiento.horaApertura || '08:00:00').slice(0, 5);
   document.getElementById('tienda-hora-cierre').value = (miEmprendimiento.horaCierre || '18:00:00').slice(0, 5);
   document.getElementById('tienda-descripcion').value = miEmprendimiento.descripcion || '';
+  document.getElementById('tienda-logo').value = miEmprendimiento.avatar || '';
+  document.getElementById('tienda-logo-preview').src = miEmprendimiento.avatar || '';
+}
+
+// actualiza el preview mientras escribes la URL, sin esperar a guardar
+const inputTiendaLogo = document.getElementById('tienda-logo');
+if (inputTiendaLogo) {
+  inputTiendaLogo.addEventListener('input', () => {
+    document.getElementById('tienda-logo-preview').src = inputTiendaLogo.value.trim();
+  });
 }
 
 const btnTiendaGuardar = document.getElementById('tienda-guardar');
@@ -465,6 +477,7 @@ if (btnTiendaGuardar) {
       whatsapp: document.getElementById('tienda-whatsapp').value.trim(),
       horaApertura: document.getElementById('tienda-hora-apertura').value,
       horaCierre: document.getElementById('tienda-hora-cierre').value,
+      logo: document.getElementById('tienda-logo').value.trim(),
     };
 
     const originalText = btnTiendaGuardar.textContent;
@@ -475,7 +488,7 @@ if (btnTiendaGuardar) {
       if (modoCrearEmprendimiento) {
         await apiSend('POST', '/emprendimientos', { ...payload, usuario_id: usuarioGuardado.id });
         alert('¡Tu negocio quedó creado! Ya puedes usar el resto del panel.');
-        await cargarMiTienda();
+        await cargarMiTienda(); 
       } else {
         await apiSend('PUT', `/emprendimientos/${miEmprendimiento.id}`, payload);
         // vuelve a traer el emprendimiento actualizado para que todo (sidebar, saludo) quede sincronizado
