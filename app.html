@@ -41,6 +41,27 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Mi perfil
       </a>
+      <a href="#" class="side-link" data-view="favorites">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+        Favoritos
+      </a>
+      <a href="#" class="side-link" data-view="cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/></svg>
+        Carrito
+        <span class="cart-badge" style="
+          margin-left: 8px;
+          background: var(--color-red);
+          color: white;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          display: none;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 700;
+        "></span>
+      </a>
     </nav>
     <button class="sidebar-uni" id="sidebarUniSwitch">
       <img id="sidebarUniImg" src="" alt="">
@@ -95,44 +116,6 @@
     Perfil
   </a>
 </nav>
-
-<button id="cartButton" style="
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--color-btn-primary-bg);
-  color: var(--color-btn-primary-text);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-card);
-  z-index: 100;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px;">
-    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/>
-  </svg>
-  <span class="cart-badge" style="
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: var(--color-red);
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-  "></span>
-</button>
 
 <div id="btnMode">
             <button id="modeToggle" class="theme-toggle" type="button" aria-label="Cambiar tema" aria-pressed="false">

@@ -27,6 +27,12 @@
     return res.json();
   }
 
+  async function apiDelete(path) {
+    const res = await fetch(`${API_URL}${path}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`Error en DELETE ${path}`);
+    return res.json();
+  }
+
   /* ================= AUTENTICACIÓN ================= */
   let currentUser = null;
 
@@ -180,6 +186,15 @@
   const searchInput = document.getElementById('searchInput');
 
   function setView(view) {
+    // Special views: cart opens modal instead of changing main view
+    if (view === 'cart') {
+      document.querySelectorAll('.side-link, .mobile-tabbar a').forEach(el => {
+        el.classList.toggle('active', el.dataset.view === view);
+      });
+      renderCartModal();
+      return;
+    }
+
     state.view = view;
     document.querySelectorAll('.side-link, .mobile-tabbar a').forEach(el => {
       el.classList.toggle('active', el.dataset.view === view);
@@ -195,7 +210,6 @@
   });
   document.getElementById('sidebarUniSwitch').addEventListener('click', openUniSelector);
   document.getElementById('sidebarLogout').addEventListener('click', logout);
-  document.getElementById('cartButton').addEventListener('click', renderCartModal);
 
   searchInput.addEventListener('input', (e) => {
     state.search = e.target.value;
@@ -218,6 +232,11 @@
       topbarSubtitle.textContent = '';
       topbarSearchWrap.style.display = 'none';
       renderProfile();
+    } else if (state.view === 'favorites') {
+      topbarTitle.textContent = 'Favoritos';
+      topbarSubtitle.textContent = '';
+      topbarSearchWrap.style.display = 'none';
+      renderFavorites();
     }
   }
 
@@ -387,6 +406,66 @@
       btn.addEventListener('click', () => {
         state.sellerFilter = btn.dataset.sellerView;
         setView('catalog');
+      });
+    });
+  }
+
+  /* ================= FAVORITOS (vista) ================= */
+  function renderFavorites() {
+    const favIds = state.favorites.map(id => Number(id));
+    const favProducts = products.filter(p => favIds.includes(p.id));
+
+    content.innerHTML = `
+      <div class="filters-row">
+        <h3>Favoritos</h3>
+      </div>
+      <div class="product-grid" id="favoritesGrid"></div>
+    `;
+
+    const grid = document.getElementById('favoritesGrid');
+    if (!favProducts.length) {
+      grid.style.display = 'block';
+      grid.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/></svg>
+          <h3>No tienes favoritos todavía</h3>
+          <p>Guarda productos tocando el corazón en el catálogo.</p>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = favProducts.map(p => `
+      <div class="product-card">
+        <div class="product-photo">
+          <img src="${p.image}" alt="${p.name}">
+          <span class="product-cat">${p.category}</span>
+          <button class="fav-btn active" data-fav="${p.id}">
+            <svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+          </button>
+        </div>
+        <div class="product-body">
+          <div class="product-name">${p.name}</div>
+          <div class="product-seller"><button data-seller="${p.sellerId}">${p.sellerName || ''}</button></div>
+          <div class="product-price">${fmt(p.price)}</div>
+          <button class="btn product-cta" data-add-to-cart="${p.id}">Agregar al carrito</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Listeners
+    grid.querySelectorAll('[data-fav]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.dataset.fav);
+        await toggleFavorito(id);
+        renderFavorites();
+      });
+    });
+
+    grid.querySelectorAll('[data-add-to-cart]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const productId = Number(btn.dataset.addToCart);
+        addToCart(productId, 1);
       });
     });
   }
@@ -730,7 +809,10 @@
       return;
     }
 
-    const modalHtml = `
+    let modal = document.getElementById('cartModal');
+
+    function buildModal() {
+      const modalHtml = `
       <div id="cartModal" style="
         position: fixed;
         top: 0;
@@ -754,186 +836,93 @@
           margin-left: auto;
           margin-right: auto;
         ">
-          <!-- Header -->
-          <div style="
-            padding: 20px;
-            border-bottom: 1px solid var(--color-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          ">
-            <h3 style="margin: 0;">Carrito de compra</h3>
-            <button id="closeCart" style="
-              background: none;
-              border: none;
-              font-size: 24px;
-              cursor: pointer;
-              color: var(--color-text-muted);
-            ">×</button>
+          <div style="padding:20px;border-bottom:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="margin:0;">Carrito de compra</h3>
+            <button id="closeCart" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--color-text-muted);">×</button>
           </div>
-
-          <!-- Items -->
-          <div style="
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-          " id="cartItems">
-          </div>
-
-          <!-- Footer -->
-          <div style="
-            padding: 20px;
-            border-top: 1px solid var(--color-border);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-          ">
-            <div style="
-              display: flex;
-              justify-content: space-between;
-              font-size: 14px;
-              color: var(--color-text-muted);
-            ">
-              <span>Subtotal:</span>
-              <span id="subtotal">$0</span>
-            </div>
-            <div style="
-              display: flex;
-              justify-content: space-between;
-              font-size: 18px;
-              font-weight: 700;
-            ">
-              <span>Total:</span>
-              <span id="totalCart">$0</span>
-            </div>
-            <button id="checkoutBtn" class="btn btn-primary" style="width: 100%;">
-              Confirmar compra
-            </button>
-            <button id="clearCartBtn" class="btn btn-ghost" style="width: 100%; color: var(--color-red);">
-              Vaciar carrito
-            </button>
+          <div style="flex:1;overflow-y:auto;padding:20px;" id="cartItems"></div>
+          <div style="padding:20px;border-top:1px solid var(--color-border);display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--color-text-muted);"><span>Subtotal:</span><span id="subtotal">$0</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;"><span>Total:</span><span id="totalCart">$0</span></div>
+            <button id="checkoutBtn" class="btn btn-primary" style="width:100%;">Confirmar compra</button>
+            <button id="clearCartBtn" class="btn btn-ghost" style="width:100%;color:var(--color-red);">Vaciar carrito</button>
           </div>
         </div>
-      </div>
-      <style>
-        @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
+      </div>`;
+
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      modal = document.getElementById('cartModal');
+
+      // Delegated listener for item buttons
+      const itemsContainer = modal.querySelector('#cartItems');
+      itemsContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        if (btn.classList.contains('item-qty-btn')) {
+          const productId = Number(btn.dataset.product);
+          const action = btn.dataset.action;
+          const item = cart.find(i => i.productId === productId);
+          if (!item) return;
+          if (action === 'plus') updateCartQuantity(productId, item.cantidad + 1);
+          if (action === 'minus') updateCartQuantity(productId, Math.max(1, item.cantidad - 1));
+          updateCartModalContents();
         }
-        @keyframes slideIn {
-          from { transform: translateX(400px); }
-          to { transform: translateX(0); }
+        if (btn.classList.contains('remove-item')) {
+          const productId = Number(btn.dataset.product);
+          removeFromCart(productId);
+          updateCartModalContents();
         }
-      </style>
-    `;
+      });
 
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+      // Footer buttons
+      modal.querySelector('#closeCart').addEventListener('click', () => modal.remove());
+      modal.querySelector('#clearCartBtn').addEventListener('click', () => {
+        if (confirm('¿Vaciar el carrito?')) {
+          clearCart();
+          modal.remove();
+        }
+      });
+      modal.querySelector('#checkoutBtn').addEventListener('click', checkout);
+    }
 
-    // Renderizar items
-    const itemsContainer = document.getElementById('cartItems');
-    itemsContainer.innerHTML = cart.map(item => `
-      <div style="
-        padding: 12px;
-        border: 1px solid var(--color-border);
-        border-radius: 8px;
-        margin-bottom: 12px;
-        display: grid;
-        grid-template-columns: 80px 1fr 80px;
-        gap: 12px;
-        align-items: center;
-      ">
-        <img src="${item.image}" alt="${item.name}" style="
-          width: 80px;
-          height: 80px;
-          object-fit: cover;
-          border-radius: 6px;
-        ">
-        <div>
-          <div style="font-weight: 600; margin-bottom: 4px;">${item.name}</div>
-          <div style="font-size: 14px; color: var(--color-text-muted); margin-bottom: 8px;">
-            ${fmt(item.price)} c/u
-          </div>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <button class="item-qty-btn" data-product="${item.productId}" data-action="minus" style="
-              width: 24px;
-              height: 24px;
-              border: 1px solid var(--color-border);
-              border-radius: 4px;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            ">−</button>
-            <span style="width: 20px; text-align: center;">${item.cantidad}</span>
-            <button class="item-qty-btn" data-product="${item.productId}" data-action="plus" style="
-              width: 24px;
-              height: 24px;
-              border: 1px solid var(--color-border);
-              border-radius: 4px;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            ">+</button>
-          </div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-weight: 600;">${fmt(item.price * item.cantidad)}</div>
-          <button class="remove-item" data-product="${item.productId}" style="
-            background: none;
-            border: none;
-            color: var(--color-red);
-            cursor: pointer;
-            font-size: 12px;
-            text-decoration: underline;
-            margin-top: 8px;
-          ">Eliminar</button>
-        </div>
-      </div>
-    `).join('');
-
-    // Actualizar totales
-    const total = getCartTotal();
-    document.getElementById('subtotal').textContent = fmt(total);
-    document.getElementById('totalCart').textContent = fmt(total);
-
-    // Event listeners
-    document.getElementById('closeCart').addEventListener('click', () => {
-      document.getElementById('cartModal').remove();
-    });
-
-    document.getElementById('clearCartBtn').addEventListener('click', () => {
-      if (confirm('¿Vaciar el carrito?')) {
-        clearCart();
-        document.getElementById('cartModal').remove();
+    function updateCartModalContents() {
+      if (!modal) return;
+      const itemsContainer = modal.querySelector('#cartItems');
+      if (!itemsContainer) return;
+      if (cart.length === 0) {
+        modal.remove();
+        updateCartBadge();
+        return;
       }
-    });
+      itemsContainer.innerHTML = cart.map(item => `
+        <div style="padding:12px;border:1px solid var(--color-border);border-radius:8px;margin-bottom:12px;display:grid;grid-template-columns:80px 1fr 80px;gap:12px;align-items:center;">
+          <img src="${item.image}" alt="${item.name}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;">
+          <div>
+            <div style="font-weight:600;margin-bottom:4px;">${item.name}</div>
+            <div style="font-size:14px;color:var(--color-text-muted);margin-bottom:8px;">${fmt(item.price)} c/u</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="item-qty-btn" data-product="${item.productId}" data-action="minus" style="width:24px;height:24px;border:1px solid var(--color-border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+              <span style="width:20px;text-align:center;">${item.cantidad}</span>
+              <button class="item-qty-btn" data-product="${item.productId}" data-action="plus" style="width:24px;height:24px;border:1px solid var(--color-border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:600;">${fmt(item.price * item.cantidad)}</div>
+            <button class="remove-item" data-product="${item.productId}" style="background:none;border:none;color:var(--color-red);cursor:pointer;font-size:12px;text-decoration:underline;margin-top:8px;">Eliminar</button>
+          </div>
+        </div>
+      `).join('');
 
-    document.getElementById('checkoutBtn').addEventListener('click', checkout);
+      const total = getCartTotal();
+      const subtotalEl = modal.querySelector('#subtotal');
+      const totalEl = modal.querySelector('#totalCart');
+      if (subtotalEl) subtotalEl.textContent = fmt(total);
+      if (totalEl) totalEl.textContent = fmt(total);
+      updateCartBadge();
+    }
 
-    document.querySelectorAll('.item-qty-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const productId = parseInt(btn.dataset.product);
-        const action = btn.dataset.action;
-        const item = cart.find(i => i.productId === productId);
-        if (item) {
-          if (action === 'plus') {
-            updateCartQuantity(productId, item.cantidad + 1);
-          } else if (action === 'minus' && item.cantidad > 1) {
-            updateCartQuantity(productId, item.cantidad - 1);
-          }
-          renderCartModal();
-        }
-      });
-    });
-
-    document.querySelectorAll('.remove-item').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const productId = parseInt(btn.dataset.product);
-        removeFromCart(productId);
-        renderCartModal();
-      });
-    });
+    if (!modal) buildModal();
+    updateCartModalContents();
   }
 
   async function checkout() {
@@ -941,8 +930,7 @@
       alert('El carrito está vacío');
       return;
     }
-
-    // Validar stock
+    // Validación rápida en cliente (mejor verificación la realiza el servidor)
     for (const item of cart) {
       const product = products.find(p => p.id === item.productId);
       if (!product || item.cantidad > product.stock) {
@@ -953,41 +941,29 @@
 
     try {
       const total = getCartTotal();
+      const items = cart.map(item => ({
+        producto_id: item.productId,
+        cantidad: item.cantidad,
+        subtotal: item.price * item.cantidad,
+      }));
 
-      // Crear transacción
-      const transaccionRes = await apiPost('/transacciones', {
-        usuario_id: currentUser.id,
-        monto_total: total,
-        estado: 'confirmado',
+      // Llamada atómica al servidor: crea transacción, detalle y actualiza inventario
+      const res = await fetch(`${API_URL}/pedidos/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id: currentUser.id, monto_total: total, items }),
       });
 
-      const transaccionId = transaccionRes.transaccion.id;
-
-      // Crear detalles de transacción y actualizar stock
-      for (const item of cart) {
-        await apiPost('/detalle-transacciones', {
-          transaccion_id: transaccionId,
-          producto_id: item.productId,
-          cantidad: item.cantidad,
-          subtotal: item.price * item.cantidad,
-        });
-
-        // Actualizar inventario
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-          const newStock = product.stock - item.cantidad;
-          await apiPut(`/inventario/${item.productId}`, {
-            stock: newStock,
-          });
-          product.stock = newStock;
-        }
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Error al procesar la compra');
+        return;
       }
 
       clearCart();
-      document.getElementById('cartModal').remove();
+      const modal = document.getElementById('cartModal'); if (modal) modal.remove();
       alert('¡Compra confirmada! Revisa tu historial de pedidos.');
       renderProfile();
-      
     } catch (err) {
       console.error('Error en compra:', err);
       alert('Error al procesar la compra. Intenta de nuevo.');
@@ -998,7 +974,7 @@
   async function loadFavoritos() {
     try {
       const favoritos = await apiGet(`/favoritos?usuario_id=${currentUser.id}`);
-      state.favorites = favoritos.map(f => f.producto_id);
+      state.favorites = favoritos.map(f => Number(f.producto_id));
     } catch (err) {
       console.error('Error cargando favoritos:', err);
       state.favorites = [];
@@ -1007,19 +983,17 @@
 
   async function toggleFavorito(productId) {
     try {
-      if (state.favorites.includes(productId)) {
+      if (state.favorites.includes(Number(productId))) {
         // Eliminar de favoritos
-        await fetch(`${API_URL}/favoritos/${productId}?usuario_id=${currentUser.id}`, {
-          method: 'DELETE',
-        });
-        state.favorites = state.favorites.filter(id => id !== productId);
+        await apiDelete(`/favoritos/${productId}?usuario_id=${currentUser.id}`);
+        state.favorites = state.favorites.filter(id => id !== Number(productId));
       } else {
         // Agregar a favoritos
         await apiPost(`/favoritos`, {
           usuario_id: currentUser.id,
           producto_id: productId,
         });
-        state.favorites.push(productId);
+        state.favorites.push(Number(productId));
       }
     } catch (err) {
       console.error('Error actualizando favorito:', err);
