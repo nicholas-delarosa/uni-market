@@ -254,7 +254,12 @@ signUpForm.addEventListener('submit', async (e) => {
 
     // cuenta creada: entra directo a la app, igual que si hubiera hecho login
     localStorage.setItem('um_usuario', JSON.stringify(data.usuario));
-    window.location.href = getPostAuthRedirect();
+    if (rol === 'emprendedor') {
+      localStorage.removeItem(AUTH_REDIRECT_KEY);
+      window.location.href = 'emprendedor.html';
+    } else {
+      window.location.href = getPostAuthRedirect();
+    }
 
   } catch (err) {
     console.error(err);
