@@ -1,9 +1,7 @@
 const API_URL = 'http://localhost:3000/api';
 
-// esta vista es solo para emprendedores: necesita sesión iniciada Y
-// que el usuario tenga el rol "vendedor" (se lo asignamos solo cuando
-// verifica su correo institucional). Un estudiante normal logueado
-// no puede entrar aquí solo por tener sesión.
+// esta vista es solo para emprendedores: necesita sesión iniciada,
+// un rol de vendedor/emprendedor y correo institucional verificado.
 let usuarioGuardado = JSON.parse(localStorage.getItem('um_usuario') || 'null');
 
 function isVendedorRole(roles = []) {
@@ -50,6 +48,25 @@ async function validateAndLoadUser() {
     console.error('Error validando sesión en panel emprendedor:', err);
     return null;
   }
+}
+
+async function ensureInstitutionalVerification(user) {
+  if (!user?.correo_institucional || user.correo_institucional_verificado) {
+    return user;
+  }
+
+  alert('Debes verificar tu correo institucional antes de utilizar el panel de emprendedor.');
+
+  const verifiedUser = await window.UmInstitutionalVerification.promptInstitutionalVerification(user, {
+    successMessage: 'Correo institucional verificado. Ya puedes usar el panel de emprendedor.',
+  });
+
+  if (verifiedUser) {
+    usuarioGuardado = verifiedUser;
+    localStorage.setItem('um_usuario', JSON.stringify(verifiedUser));
+  }
+
+  return verifiedUser;
 }
 
 function getDisplayName(user) {
@@ -366,7 +383,13 @@ async function cargarMiTienda() {
     return;
   }
 
-  renderAuthenticatedUserInfo(user);
+  const verifiedUser = await ensureInstitutionalVerification(user);
+  if (!verifiedUser || !verifiedUser.correo_institucional_verificado) {
+    window.location.href = 'app.html';
+    return;
+  }
+
+  renderAuthenticatedUserInfo(verifiedUser);
   cargarMiTienda();
 })();
 

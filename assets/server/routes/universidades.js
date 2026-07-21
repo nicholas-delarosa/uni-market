@@ -6,7 +6,7 @@ const pool = require('../db');
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, nombre_universidad AS name
+      `SELECT id, nombre_universidad AS name, dominio_correo AS "emailDomain"
        FROM universidades
        ORDER BY nombre_universidad`
     );
