@@ -590,6 +590,30 @@ body.dark-mode .theme-toggle .icon-moon {
   transform: translateX(2px);
 }
 
+.sidebar-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-red);
+  transition: background-color 0.15s ease;
+}
+
+.sidebar-logout svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.sidebar-logout:hover {
+  background: var(--color-red-soft);
+}
+
 .main {
   flex: 1;
   min-width: 0;
