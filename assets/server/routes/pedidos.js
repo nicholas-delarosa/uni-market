@@ -306,10 +306,13 @@ router.patch('/:id', async (req, res) => {
 // POST /api/pedidos/checkout
 // body: { usuario_id, monto_total, items: [{ producto_id, cantidad, subtotal }] }
 router.post('/checkout', async (req, res) => {
-  const { usuario_id, monto_total, items } = req.body;
+  const { usuario_id, items } = req.body;
+  // acepta "monto_total" o "total" -- distintas versiones del frontend
+  // han usado uno u otro nombre para este campo
+  const monto_total = req.body.monto_total ?? req.body.total;
 
   if (!usuario_id || monto_total === undefined || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'usuario_id, monto_total y items son obligatorios' });
+    return res.status(400).json({ error: 'usuario_id, monto_total (o total) y items son obligatorios' });
   }
 
   const client = await pool.connect();
@@ -317,8 +320,10 @@ router.post('/checkout', async (req, res) => {
     await client.query('BEGIN');
 
     // Crear transacción
+    // OJO: la columna en la tabla se llama "total", no "monto_total"
+    // (monto_total es solo el nombre que usa el body del request)
     const transRes = await client.query(
-      `INSERT INTO transacciones (usuario_id, monto_total, estado, fecha)
+      `INSERT INTO transacciones (usuario_id, total, estado, fecha)
        VALUES ($1, $2, 'confirmado', NOW())
        RETURNING id`,
       [usuario_id, monto_total]
@@ -345,11 +350,16 @@ router.post('/checkout', async (req, res) => {
         return res.status(409).json({ error: `Stock insuficiente para producto ${producto_id}` });
       }
 
+      // precio_unitario es obligatorio (NOT NULL) en detalle_transacciones.
+      // Lo derivamos del subtotal/cantidad en vez de pedirlo aparte al frontend,
+      // así no hay que tocar lo que ya manda el carrito.
+      const precioUnitario = cantidad > 0 ? Number(subtotal) / Number(cantidad) : 0;
+
       // Insertar detalle
       await client.query(
-        `INSERT INTO detalle_transacciones (transaccion_id, producto_id, cantidad, subtotal)
-         VALUES ($1, $2, $3, $4)`,
-        [transaccionId, producto_id, cantidad, subtotal]
+        `INSERT INTO detalle_transacciones (transaccion_id, producto_id, cantidad, precio_unitario, subtotal)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [transaccionId, producto_id, cantidad, precioUnitario, subtotal]
       );
 
       // Actualizar inventario

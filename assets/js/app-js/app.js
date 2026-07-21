@@ -1112,7 +1112,7 @@
       const res = await fetch(`${API_URL}/pedidos/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario_id: currentUser.id, monto_total: total, items }),
+        body: JSON.stringify({ usuario_id: currentUser.id, total: total, items }),
       });
 
       const data = await res.json();
